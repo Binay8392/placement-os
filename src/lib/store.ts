@@ -85,11 +85,13 @@ interface AppState {
     category: StudySession['category'];
     startTime: number | null;
     elapsed: number;
+    pausedAt: number | null;
   };
   startTimer: (category: StudySession['category']) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
   stopTimer: () => void;
+  resetTimer: () => void;
   updateElapsed: (elapsed: number) => void;
   
   // Habits
@@ -140,6 +142,7 @@ export const useStore = create<AppState>()(
         category: 'dsa',
         startTime: null,
         elapsed: 0,
+        pausedAt: null,
       },
       startTimer: (category) => set({
         activeTimer: {
@@ -147,24 +150,32 @@ export const useStore = create<AppState>()(
           category,
           startTime: Date.now(),
           elapsed: 0,
+          pausedAt: null,
         }
       }),
       pauseTimer: () => set((state) => ({
         activeTimer: {
           ...state.activeTimer,
           isRunning: false,
+          pausedAt: Date.now(),
         }
       })),
-      resumeTimer: () => set((state) => ({
-        activeTimer: {
-          ...state.activeTimer,
-          isRunning: true,
-          startTime: Date.now() - state.activeTimer.elapsed * 1000,
-        }
-      })),
+      resumeTimer: () => set((state) => {
+        const pauseDuration = state.activeTimer.pausedAt 
+          ? Date.now() - state.activeTimer.pausedAt 
+          : 0;
+        return {
+          activeTimer: {
+            ...state.activeTimer,
+            isRunning: true,
+            startTime: (state.activeTimer.startTime || Date.now()) + pauseDuration,
+            pausedAt: null,
+          }
+        };
+      }),
       stopTimer: () => {
         const { activeTimer, addStudySession } = get();
-        if (activeTimer.elapsed > 60) { // Only save if more than 1 minute
+        if (activeTimer.elapsed > 10) { // Save if more than 10 seconds (for testing)
           addStudySession({
             id: Date.now().toString(),
             category: activeTimer.category,
@@ -178,11 +189,21 @@ export const useStore = create<AppState>()(
             category: 'dsa',
             startTime: null,
             elapsed: 0,
+            pausedAt: null,
           }
         });
       },
       updateElapsed: (elapsed) => set((state) => ({
         activeTimer: { ...state.activeTimer, elapsed }
+      })),
+      resetTimer: () => set((state) => ({
+        activeTimer: {
+          ...state.activeTimer,
+          isRunning: false,
+          startTime: null,
+          elapsed: 0,
+          pausedAt: null,
+        }
       })),
       
       // Habits

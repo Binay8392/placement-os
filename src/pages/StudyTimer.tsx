@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Play, Pause, Square, RotateCcw } from 'lucide-react';
@@ -14,7 +14,7 @@ const categories = [
 function formatTime(seconds: number): string {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
+  const secs = Math.floor(seconds % 60);
   
   if (hrs > 0) {
     return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -23,42 +23,39 @@ function formatTime(seconds: number): string {
 }
 
 export default function StudyTimer() {
-  const { 
-    activeTimer, 
-    startTimer, 
-    pauseTimer, 
-    resumeTimer, 
-    stopTimer,
-    updateElapsed,
-    studySessions,
-    getTodayString
-  } = useStore((state) => ({
-    activeTimer: state.activeTimer,
-    startTimer: state.startTimer,
-    pauseTimer: state.pauseTimer,
-    resumeTimer: state.resumeTimer,
-    stopTimer: state.stopTimer,
-    updateElapsed: state.updateElapsed,
-    studySessions: state.studySessions,
-    getTodayString: () => new Date().toISOString().split('T')[0],
-  }));
-
-  const today = getTodayString();
+  const activeTimer = useStore((state) => state.activeTimer);
+  const startTimer = useStore((state) => state.startTimer);
+  const pauseTimer = useStore((state) => state.pauseTimer);
+  const resumeTimer = useStore((state) => state.resumeTimer);
+  const stopTimer = useStore((state) => state.stopTimer);
+  const resetTimer = useStore((state) => state.resetTimer);
+  const updateElapsed = useStore((state) => state.updateElapsed);
+  const studySessions = useStore((state) => state.studySessions);
+  
+  const intervalRef = useRef<number | null>(null);
+  const today = new Date().toISOString().split('T')[0];
   const todaySessions = studySessions.filter((s) => s.date === today);
   const todayTotal = todaySessions.reduce((acc, s) => acc + s.duration, 0);
 
   // Timer tick effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
     if (activeTimer.isRunning && activeTimer.startTime) {
-      interval = setInterval(() => {
+      intervalRef.current = window.setInterval(() => {
         const elapsed = Math.floor((Date.now() - activeTimer.startTime!) / 1000);
         updateElapsed(elapsed);
-      }, 1000);
+      }, 100);
+    } else {
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
     
-    return () => clearInterval(interval);
+    return () => {
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+      }
+    };
   }, [activeTimer.isRunning, activeTimer.startTime, updateElapsed]);
 
   const handleStart = useCallback((category: typeof categories[number]['id']) => {
@@ -68,16 +65,21 @@ export default function StudyTimer() {
   const handleToggle = useCallback(() => {
     if (activeTimer.isRunning) {
       pauseTimer();
-    } else if (activeTimer.elapsed > 0) {
+    } else if (activeTimer.startTime) {
       resumeTimer();
     }
-  }, [activeTimer.isRunning, activeTimer.elapsed, pauseTimer, resumeTimer]);
+  }, [activeTimer.isRunning, activeTimer.startTime, pauseTimer, resumeTimer]);
 
   const handleStop = useCallback(() => {
     stopTimer();
   }, [stopTimer]);
 
+  const handleReset = useCallback(() => {
+    resetTimer();
+  }, [resetTimer]);
+
   const currentCategory = categories.find((c) => c.id === activeTimer.category);
+  const hasActiveSession = activeTimer.startTime !== null || activeTimer.elapsed > 0;
 
   return (
     <div className="min-h-screen pb-24 md:pb-8">
@@ -99,7 +101,7 @@ export default function StudyTimer() {
               <span className="text-5xl font-bold font-mono tracking-tight">
                 {formatTime(activeTimer.elapsed)}
               </span>
-              {activeTimer.elapsed > 0 && currentCategory && (
+              {hasActiveSession && currentCategory && (
                 <span className={cn(
                   "mt-2 px-3 py-1 rounded-full text-xs font-medium",
                   currentCategory.color,
@@ -113,7 +115,7 @@ export default function StudyTimer() {
 
           {/* Controls */}
           <div className="flex items-center gap-4 mt-8">
-            {activeTimer.elapsed > 0 ? (
+            {hasActiveSession ? (
               <>
                 <Button
                   variant="outline"
@@ -138,7 +140,7 @@ export default function StudyTimer() {
                   variant="outline"
                   size="icon"
                   className="w-14 h-14 rounded-full"
-                  onClick={() => updateElapsed(0)}
+                  onClick={handleReset}
                 >
                   <RotateCcw className="w-5 h-5" />
                 </Button>
@@ -150,7 +152,7 @@ export default function StudyTimer() {
         </section>
 
         {/* Category Selection */}
-        {activeTimer.elapsed === 0 && (
+        {!hasActiveSession && (
           <section>
             <h2 className="font-semibold mb-3">What are you studying?</h2>
             <div className="grid grid-cols-2 gap-3">
