@@ -460,9 +460,10 @@ function GovtExamStatusTimeline({ exam }: { exam: GovtExam }) {
   );
 }
 
-function GovtExamCard({ exam, onEdit }: { 
+function GovtExamCard({ exam, onEdit, onSendReminder }: { 
   exam: GovtExam; 
   onEdit: () => void;
+  onSendReminder: (exam: GovtExam) => void;
 }) {
   const { deleteGovtExam } = useStore();
   const ResultIcon = govtExamResultIcons[exam.result];
@@ -470,6 +471,9 @@ function GovtExamCard({ exam, onEdit }: {
   
   const hasUpcomingReminder = exam.reminderDate && 
     isAfter(parseISO(exam.reminderDate), new Date());
+    
+  const hasUpcomingExam = exam.examDate && 
+    isAfter(parseISO(exam.examDate), new Date());
 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 hover:border-primary/30">
@@ -490,7 +494,7 @@ function GovtExamCard({ exam, onEdit }: {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {hasUpcomingReminder && (
+            {(hasUpcomingReminder || hasUpcomingExam) && (
               <Bell className="w-4 h-4 text-yellow-400 animate-pulse" />
             )}
             <Badge className={`${govtExamResultColors[exam.result]} border`}>
@@ -546,6 +550,16 @@ function GovtExamCard({ exam, onEdit }: {
             <Edit className="w-4 h-4 mr-1" />
             Edit
           </Button>
+          {(hasUpcomingExam || hasUpcomingReminder) && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="text-amber-500 hover:text-amber-500"
+              onClick={() => onSendReminder(exam)}
+            >
+              <Mail className="w-4 h-4" />
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="sm" 
@@ -775,7 +789,11 @@ export default function PlacementsPage() {
   const [editingApp, setEditingApp] = useState<PlacementApplication | undefined>();
   const [filter, setFilter] = useState<'all' | 'placement' | 'internship'>('all');
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
-  const [emailData, setEmailData] = useState<{ app: PlacementApplication; type: 'interview' | 'followup' } | null>(null);
+  const [emailData, setEmailData] = useState<{ 
+    type: 'interview' | 'followup' | 'exam';
+    app?: PlacementApplication; 
+    exam?: GovtExam;
+  } | null>(null);
   const [userEmail, setUserEmail] = useState('');
   const [isSending, setIsSending] = useState(false);
   
@@ -854,6 +872,11 @@ export default function PlacementsPage() {
     setEmailDialogOpen(true);
   };
 
+  const handleSendGovtExamReminder = (exam: GovtExam) => {
+    setEmailData({ exam, type: 'exam' });
+    setEmailDialogOpen(true);
+  };
+
   const sendEmailReminder = async () => {
     if (!emailData || !userEmail.trim()) {
       toast({ title: "Please enter your email", variant: "destructive" });
@@ -868,20 +891,39 @@ export default function PlacementsPage() {
 
     setIsSending(true);
     try {
-      const date = emailData.type === 'interview' 
-        ? emailData.app.interviewDate 
-        : emailData.app.reminderDate;
-
-      const { data, error } = await supabase.functions.invoke('send-reminder', {
-        body: {
+      let body: Record<string, any>;
+      
+      if (emailData.type === 'exam' && emailData.exam) {
+        // Govt exam reminder
+        const date = emailData.exam.examDate || emailData.exam.reminderDate;
+        body = {
+          email: userEmail.trim(),
+          type: 'exam',
+          examName: emailData.exam.examName,
+          organization: emailData.exam.organization,
+          category: emailData.exam.category,
+          postName: emailData.exam.postName,
+          date: date ? format(parseISO(date), 'MMMM d, yyyy') : 'TBD',
+          notes: emailData.exam.notes,
+        };
+      } else if (emailData.app) {
+        // Job application reminder
+        const date = emailData.type === 'interview' 
+          ? emailData.app.interviewDate 
+          : emailData.app.reminderDate;
+        body = {
           email: userEmail.trim(),
           company: emailData.app.company,
           role: emailData.app.role,
           type: emailData.type,
           date: date ? format(parseISO(date), 'MMMM d, yyyy') : 'TBD',
           notes: emailData.app.notes,
-        },
-      });
+        };
+      } else {
+        throw new Error('Invalid email data');
+      }
+
+      const { data, error } = await supabase.functions.invoke('send-reminder', { body });
 
       if (error) throw error;
 
@@ -1199,6 +1241,7 @@ export default function PlacementsPage() {
                         key={exam.id} 
                         exam={exam} 
                         onEdit={() => handleOpenGovtDialog(exam)}
+                        onSendReminder={handleSendGovtExamReminder}
                       />
                     ))}
                   </div>
@@ -1217,7 +1260,12 @@ export default function PlacementsPage() {
                 Send Reminder Email
               </DialogTitle>
               <DialogDescription>
-                Get a reminder email for {emailData?.app.company} - {emailData?.app.role}
+                {emailData?.type === 'exam' && emailData?.exam
+                  ? `Get a reminder email for ${emailData.exam.examName} - ${emailData.exam.organization}`
+                  : emailData?.app 
+                    ? `Get a reminder email for ${emailData.app.company} - ${emailData.app.role}`
+                    : 'Get a reminder email'
+                }
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -1232,15 +1280,30 @@ export default function PlacementsPage() {
                 />
               </div>
               <div className="bg-muted/50 p-3 rounded-lg text-sm">
-                <p className="font-medium mb-1">
-                  {emailData?.type === 'interview' ? '🎯 Interview Reminder' : '📋 Follow-up Reminder'}
-                </p>
-                <p className="text-muted-foreground">
-                  {emailData?.type === 'interview' 
-                    ? `Interview scheduled for ${emailData?.app.interviewDate ? format(parseISO(emailData.app.interviewDate), 'MMMM d, yyyy') : 'TBD'}`
-                    : `Follow up on ${emailData?.app.reminderDate ? format(parseISO(emailData.app.reminderDate), 'MMMM d, yyyy') : 'TBD'}`
-                  }
-                </p>
+                {emailData?.type === 'exam' && emailData?.exam ? (
+                  <>
+                    <p className="font-medium mb-1">📝 Exam Reminder</p>
+                    <p className="text-muted-foreground">
+                      Exam: {emailData.exam.examName}
+                      {emailData.exam.examDate && ` on ${format(parseISO(emailData.exam.examDate), 'MMMM d, yyyy')}`}
+                    </p>
+                    {emailData.exam.postName && (
+                      <p className="text-muted-foreground">Post: {emailData.exam.postName}</p>
+                    )}
+                  </>
+                ) : emailData?.app ? (
+                  <>
+                    <p className="font-medium mb-1">
+                      {emailData?.type === 'interview' ? '🎯 Interview Reminder' : '📋 Follow-up Reminder'}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {emailData?.type === 'interview' 
+                        ? `Interview scheduled for ${emailData.app.interviewDate ? format(parseISO(emailData.app.interviewDate), 'MMMM d, yyyy') : 'TBD'}`
+                        : `Follow up on ${emailData.app.reminderDate ? format(parseISO(emailData.app.reminderDate), 'MMMM d, yyyy') : 'TBD'}`
+                      }
+                    </p>
+                  </>
+                ) : null}
               </div>
             </div>
             <DialogFooter>
