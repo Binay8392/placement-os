@@ -1,8 +1,10 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { Play, Pause, Square, RotateCcw } from 'lucide-react';
+import { Play, Pause, Square, RotateCcw, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { soundManager, checkMilestone, getMilestoneName } from '@/lib/sounds';
+import { toast } from '@/hooks/use-toast';
 
 const categories = [
   { id: 'dsa' as const, label: 'DSA', color: 'bg-primary' },
@@ -33,15 +35,37 @@ export default function StudyTimer() {
   const studySessions = useStore((state) => state.studySessions);
   
   const intervalRef = useRef<number | null>(null);
+  const previousElapsedRef = useRef<number>(0);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  
   const today = new Date().toISOString().split('T')[0];
   const todaySessions = studySessions.filter((s) => s.date === today);
   const todayTotal = todaySessions.reduce((acc, s) => acc + s.duration, 0);
 
-  // Timer tick effect
+  // Sync sound manager with state
+  useEffect(() => {
+    soundManager.setEnabled(soundEnabled);
+  }, [soundEnabled]);
+
+  // Timer tick effect with milestone detection
   useEffect(() => {
     if (activeTimer.isRunning && activeTimer.startTime) {
       intervalRef.current = window.setInterval(() => {
         const elapsed = Math.floor((Date.now() - activeTimer.startTime!) / 1000);
+        
+        // Check for milestones
+        if (checkMilestone(elapsed, previousElapsedRef.current)) {
+          soundManager.play('milestone');
+          const milestoneName = getMilestoneName(elapsed);
+          if (milestoneName) {
+            toast({
+              title: "🎉 Milestone Reached!",
+              description: `You've been studying for ${milestoneName}. Keep it up!`,
+            });
+          }
+        }
+        
+        previousElapsedRef.current = elapsed;
         updateElapsed(elapsed);
       }, 100);
     } else {
@@ -59,6 +83,8 @@ export default function StudyTimer() {
   }, [activeTimer.isRunning, activeTimer.startTime, updateElapsed]);
 
   const handleStart = useCallback((category: typeof categories[number]['id']) => {
+    soundManager.play('start');
+    previousElapsedRef.current = 0;
     startTimer(category);
   }, [startTimer]);
 
@@ -66,16 +92,20 @@ export default function StudyTimer() {
     if (activeTimer.isRunning) {
       pauseTimer();
     } else if (activeTimer.startTime) {
+      soundManager.play('start');
       resumeTimer();
     }
   }, [activeTimer.isRunning, activeTimer.startTime, pauseTimer, resumeTimer]);
 
   const handleStop = useCallback(() => {
+    soundManager.play('stop');
     stopTimer();
+    previousElapsedRef.current = 0;
   }, [stopTimer]);
 
   const handleReset = useCallback(() => {
     resetTimer();
+    previousElapsedRef.current = 0;
   }, [resetTimer]);
 
   const currentCategory = categories.find((c) => c.id === activeTimer.category);
@@ -84,8 +114,24 @@ export default function StudyTimer() {
   return (
     <div className="min-h-screen pb-24 md:pb-8">
       <header className="px-4 pt-6 pb-4 safe-top">
-        <h1 className="text-2xl font-bold">Study Timer</h1>
-        <p className="text-muted-foreground text-sm">Track your learning sessions</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Study Timer</h1>
+            <p className="text-muted-foreground text-sm">Track your learning sessions</p>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="rounded-full"
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-5 h-5" />
+            ) : (
+              <VolumeX className="w-5 h-5 text-muted-foreground" />
+            )}
+          </Button>
+        </div>
       </header>
 
       <main className="px-4 space-y-6">
@@ -112,6 +158,30 @@ export default function StudyTimer() {
               )}
             </div>
           </div>
+
+          {/* Milestone indicators */}
+          {hasActiveSession && (
+            <div className="flex items-center gap-2 mt-4">
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                activeTimer.elapsed >= 25 * 60 ? "bg-success" : "bg-muted"
+              )} title="25 min" />
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                activeTimer.elapsed >= 30 * 60 ? "bg-success" : "bg-muted"
+              )} title="30 min" />
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                activeTimer.elapsed >= 60 * 60 ? "bg-success" : "bg-muted"
+              )} title="1 hour" />
+              <span className="text-xs text-muted-foreground ml-2">
+                {activeTimer.elapsed < 25 * 60 
+                  ? `${Math.ceil((25 * 60 - activeTimer.elapsed) / 60)}m to Pomodoro`
+                  : "Pomodoro complete!"
+                }
+              </span>
+            </div>
+          )}
 
           {/* Controls */}
           <div className="flex items-center gap-4 mt-8">
