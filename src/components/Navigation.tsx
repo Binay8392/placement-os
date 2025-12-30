@@ -10,14 +10,31 @@ import {
   Briefcase,
   Calendar,
   BarChart3,
-  Lightbulb
+  Lightbulb,
+  MoreHorizontal
 } from 'lucide-react';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { useState } from 'react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
   { to: '/timer', icon: Timer, label: 'Timer' },
   { to: '/habits', icon: CheckCircle2, label: 'Habits' },
   { to: '/dsa', icon: Code2, label: 'DSA' },
+];
+
+const moreNavItems = [
+  { to: '/aptitude', icon: BookOpen, label: 'Aptitude' },
+  { to: '/placements', icon: Briefcase, label: 'Placements' },
+  { to: '/calendar', icon: Calendar, label: 'Calendar' },
+  { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { to: '/reflect', icon: Lightbulb, label: 'Reflect' },
   { to: '/profile', icon: User, label: 'Profile' },
 ];
 
@@ -36,6 +53,8 @@ const allNavItems = [
 
 export function BottomNav() {
   const location = useLocation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const isMoreActive = moreNavItems.some(item => location.pathname === item.to);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
@@ -67,6 +86,57 @@ export function BottomNav() {
               </RouterNavLink>
             );
           })}
+          
+          {/* More Menu */}
+          <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+            <DrawerTrigger asChild>
+              <button
+                className={cn(
+                  "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200",
+                  isMoreActive 
+                    ? "text-primary" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <div className={cn(
+                  "p-1.5 rounded-xl transition-all duration-200",
+                  isMoreActive && "gradient-primary shadow-glow"
+                )}>
+                  <MoreHorizontal className={cn(
+                    "w-5 h-5 transition-all",
+                    isMoreActive && "text-primary-foreground"
+                  )} />
+                </div>
+                <span className="text-[10px] font-medium">More</span>
+              </button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>More Features</DrawerTitle>
+              </DrawerHeader>
+              <div className="p-4 pb-8 grid grid-cols-3 gap-4">
+                {moreNavItems.map(({ to, icon: Icon, label }) => {
+                  const isActive = location.pathname === to;
+                  return (
+                    <RouterNavLink
+                      key={to}
+                      to={to}
+                      onClick={() => setDrawerOpen(false)}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-200",
+                        isActive 
+                          ? "bg-primary/10 text-primary" 
+                          : "bg-muted/50 text-muted-foreground hover:bg-accent hover:text-foreground"
+                      )}
+                    >
+                      <Icon className="w-6 h-6" />
+                      <span className="text-xs font-medium">{label}</span>
+                    </RouterNavLink>
+                  );
+                })}
+              </div>
+            </DrawerContent>
+          </Drawer>
         </div>
       </div>
     </nav>
