@@ -1,9 +1,14 @@
 import { useState, useMemo } from 'react';
-import { useStore } from '@/lib/store';
+import { useStore, StudySession } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { toast } from '@/hooks/use-toast';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -14,7 +19,8 @@ import {
   BookOpen,
   Code2,
   Cpu,
-  Rocket
+  Rocket,
+  Plus
 } from 'lucide-react';
 import { 
   format, 
@@ -30,7 +36,8 @@ import {
   addWeeks,
   subWeeks,
   parseISO,
-  isToday
+  isToday,
+  isFuture
 } from 'date-fns';
 
 type CalendarEvent = {
@@ -233,11 +240,13 @@ function MonthView({
 function DayDetail({ 
   date, 
   events,
-  onClose 
+  onClose,
+  onAddEvent
 }: { 
   date: Date | null; 
   events: CalendarEvent[];
   onClose: () => void;
+  onAddEvent: () => void;
 }) {
   if (!date) return null;
 
@@ -249,16 +258,26 @@ function DayDetail({
             <CalendarIcon className="w-5 h-5 text-primary" />
             {format(date, 'EEEE, MMMM d, yyyy')}
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>
-            Close
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={onAddEvent}>
+              <Plus className="w-4 h-4 mr-1" />
+              Add Event
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              Close
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         {events.length === 0 ? (
-          <p className="text-muted-foreground text-center py-8">
-            No events scheduled for this day
-          </p>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No events scheduled for this day</p>
+            <Button variant="outline" onClick={onAddEvent}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add your first event
+            </Button>
+          </div>
         ) : (
           <div className="space-y-3">
             {events.map((event) => {
@@ -300,11 +319,205 @@ function DayDetail({
   );
 }
 
+type EventType = 'study' | 'interview' | 'oa' | 'reminder';
+
+function AddEventDialog({
+  open,
+  onOpenChange,
+  selectedDate,
+  onAddStudySession,
+  onAddApplication
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedDate: Date | null;
+  onAddStudySession: (session: Omit<StudySession, 'id'>) => void;
+  onAddApplication: (data: { company: string; role: string; type: 'interview' | 'oa' | 'reminder'; date: string }) => void;
+}) {
+  const [eventType, setEventType] = useState<EventType>('study');
+  const [studyCategory, setStudyCategory] = useState<StudySession['category']>('dsa');
+  const [hours, setHours] = useState('1');
+  const [minutes, setMinutes] = useState('0');
+  const [company, setCompany] = useState('');
+  const [role, setRole] = useState('');
+
+  const handleSubmit = () => {
+    if (!selectedDate) return;
+
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+
+    if (eventType === 'study') {
+      const totalMinutes = (parseInt(hours) || 0) * 60 + (parseInt(minutes) || 0);
+      if (totalMinutes < 1) {
+        toast({ title: "Please enter at least 1 minute", variant: "destructive" });
+        return;
+      }
+      onAddStudySession({
+        category: studyCategory,
+        duration: totalMinutes * 60,
+        date: dateStr,
+      });
+      toast({ title: "Study session logged!" });
+    } else {
+      if (!company.trim() || !role.trim()) {
+        toast({ title: "Please fill in company and role", variant: "destructive" });
+        return;
+      }
+      onAddApplication({
+        company: company.trim(),
+        role: role.trim(),
+        type: eventType as 'interview' | 'oa' | 'reminder',
+        date: dateStr,
+      });
+      toast({ title: `${eventType === 'interview' ? 'Interview' : eventType === 'oa' ? 'Online Assessment' : 'Follow-up'} scheduled!` });
+    }
+
+    // Reset form
+    setEventType('study');
+    setStudyCategory('dsa');
+    setHours('1');
+    setMinutes('0');
+    setCompany('');
+    setRole('');
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5 text-primary" />
+            Add Event
+          </DialogTitle>
+          <DialogDescription>
+            {selectedDate ? `Add an event for ${format(selectedDate, 'MMMM d, yyyy')}` : 'Select a date first'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label>Event Type</Label>
+            <Select value={eventType} onValueChange={(v) => setEventType(v as EventType)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="study">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Study Session
+                  </div>
+                </SelectItem>
+                <SelectItem value="interview">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4" />
+                    Interview
+                  </div>
+                </SelectItem>
+                <SelectItem value="oa">
+                  <div className="flex items-center gap-2">
+                    <Code2 className="w-4 h-4" />
+                    Online Assessment
+                  </div>
+                </SelectItem>
+                <SelectItem value="reminder">
+                  <div className="flex items-center gap-2">
+                    <Bell className="w-4 h-4" />
+                    Follow-up Reminder
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {eventType === 'study' ? (
+            <>
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select value={studyCategory} onValueChange={(v) => setStudyCategory(v as StudySession['category'])}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dsa">DSA</SelectItem>
+                    <SelectItem value="aptitude">Aptitude</SelectItem>
+                    <SelectItem value="core-cs">Core CS</SelectItem>
+                    <SelectItem value="development">Development</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Duration</Label>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="12"
+                      value={hours}
+                      onChange={(e) => setHours(e.target.value)}
+                      placeholder="Hours"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Hours</p>
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={minutes}
+                      onChange={(e) => setMinutes(e.target.value)}
+                      placeholder="Minutes"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Minutes</p>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label>Company</Label>
+                <Input
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="e.g., Google"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Input
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  placeholder="e.g., SDE Intern"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} className="gradient-primary">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Event
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function CalendarPage() {
-  const { studySessions, applications } = useStore();
+  const { studySessions, applications, addStudySession, addApplication } = useStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week'>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [addEventDialogOpen, setAddEventDialogOpen] = useState(false);
 
   // Build events map from store data
   const eventsMap = useMemo(() => {
@@ -393,6 +606,45 @@ export default function CalendarPage() {
   const goToToday = () => {
     setCurrentDate(new Date());
     setSelectedDate(new Date());
+  };
+
+  const handleOpenAddEvent = () => {
+    if (!selectedDate) {
+      setSelectedDate(new Date());
+    }
+    setAddEventDialogOpen(true);
+  };
+
+  const handleAddStudySession = (session: Omit<StudySession, 'id'>) => {
+    addStudySession({
+      id: Date.now().toString(),
+      ...session,
+    });
+  };
+
+  const handleAddApplication = (data: { company: string; role: string; type: 'interview' | 'oa' | 'reminder'; date: string }) => {
+    // Add a new application with the appropriate date field set
+    const appData: any = {
+      company: data.company,
+      role: data.role,
+      type: 'placement' as const,
+      status: 'applied' as const,
+      result: 'pending' as const,
+      appliedDate: new Date().toISOString().split('T')[0],
+      notes: '',
+    };
+
+    if (data.type === 'interview') {
+      appData.interviewDate = data.date;
+      appData.status = 'interview';
+    } else if (data.type === 'oa') {
+      appData.oaDate = data.date;
+      appData.status = 'oa';
+    } else {
+      appData.reminderDate = data.date;
+    }
+
+    addApplication(appData);
   };
 
   // Calculate stats
@@ -508,6 +760,16 @@ export default function CalendarPage() {
           date={selectedDate} 
           events={selectedDateEvents}
           onClose={() => setSelectedDate(null)}
+          onAddEvent={handleOpenAddEvent}
+        />
+
+        {/* Add Event Dialog */}
+        <AddEventDialog
+          open={addEventDialogOpen}
+          onOpenChange={setAddEventDialogOpen}
+          selectedDate={selectedDate}
+          onAddStudySession={handleAddStudySession}
+          onAddApplication={handleAddApplication}
         />
 
         {/* Legend */}
