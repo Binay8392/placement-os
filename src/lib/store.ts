@@ -103,6 +103,13 @@ export interface UserProfile {
   semester: number;
   targetCompanies: string[];
   careerGoals: string;
+  skills: string[];
+  resumeUrl?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  email?: string;
+  phone?: string;
 }
 
 // Initial DSA topics
@@ -247,6 +254,13 @@ export const useStore = create<AppState>()(
         semester: 6,
         targetCompanies: ['Google', 'Microsoft', 'Amazon', 'Meta'],
         careerGoals: 'Software Engineer at a top tech company',
+        skills: ['JavaScript', 'React', 'Python', 'DSA'],
+        resumeUrl: '',
+        linkedinUrl: '',
+        githubUrl: '',
+        portfolioUrl: '',
+        email: '',
+        phone: '',
       },
       updateProfile: (updates) => set((state) => ({
         profile: { ...state.profile, ...updates }
