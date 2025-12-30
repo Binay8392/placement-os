@@ -1,15 +1,16 @@
 import { useStore, Resource } from '@/lib/store';
-import { User, Target, Building2, Moon, Sun, FileText, Plus, ExternalLink, Trash2, Edit, Link2, Video, BookOpen, File, Github, Linkedin, Globe, Mail, Phone, Code2, FileDown } from 'lucide-react';
+import { User, Target, Building2, Moon, Sun, FileText, Plus, ExternalLink, Trash2, Edit, Link2, Video, BookOpen, File, Github, Linkedin, Globe, Mail, Phone, Code2, FileDown, Camera, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const categoryIcons: Record<Resource['category'], React.ElementType> = {
   notes: FileText,
@@ -215,6 +216,8 @@ export default function ProfilePage() {
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | undefined>();
   const [resourceFilter, setResourceFilter] = useState<'all' | Resource['category']>('all');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     updateProfile(formData);
@@ -235,6 +238,85 @@ export default function ProfilePage() {
     resourceFilter === 'all' || r.category === resourceFilter
   );
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Please upload an image file", variant: "destructive" });
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "Image must be less than 2MB", variant: "destructive" });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
+
+      // Delete old avatar if exists
+      if (profile.avatarUrl) {
+        const oldPath = profile.avatarUrl.split('/').pop();
+        if (oldPath) {
+          await supabase.storage.from('avatars').remove([oldPath]);
+        }
+      }
+
+      // Upload new avatar
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Update profile
+      updateProfile({ avatarUrl: publicUrl });
+      setFormData(prev => ({ ...prev, avatarUrl: publicUrl }));
+      
+      toast({ title: "Profile photo updated!" });
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast({ 
+        title: "Failed to upload photo", 
+        description: error.message || "Please try again",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!profile.avatarUrl) return;
+
+    try {
+      const oldPath = profile.avatarUrl.split('/').pop();
+      if (oldPath) {
+        await supabase.storage.from('avatars').remove([oldPath]);
+      }
+      updateProfile({ avatarUrl: '' });
+      setFormData(prev => ({ ...prev, avatarUrl: '' }));
+      toast({ title: "Profile photo removed" });
+    } catch (error: any) {
+      console.error('Error removing avatar:', error);
+      toast({ title: "Failed to remove photo", variant: "destructive" });
+    }
+  };
+
   return (
     <div className="min-h-screen pb-24 md:pb-8 md:ml-64">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -246,9 +328,53 @@ export default function ProfilePage() {
         <main className="space-y-6">
           {/* Avatar & Name */}
           <section className="flex flex-col items-center py-6">
-            <div className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-3xl font-bold mb-4">
-              {profile.name.charAt(0)}
+            {/* Avatar with upload */}
+            <div className="relative group mb-4">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+                id="avatar-upload"
+              />
+              {profile.avatarUrl ? (
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.name}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-primary/20"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-3xl font-bold">
+                  {profile.name.charAt(0)}
+                </div>
+              )}
+              
+              {/* Upload overlay */}
+              <label
+                htmlFor="avatar-upload"
+                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-6 h-6 text-white" />
+                )}
+              </label>
             </div>
+            
+            {/* Remove photo button */}
+            {profile.avatarUrl && !isEditing && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-destructive mb-2"
+                onClick={handleRemoveAvatar}
+              >
+                Remove photo
+              </Button>
+            )}
+            
             {!isEditing ? (
               <>
                 <h2 className="text-xl font-bold">{profile.name}</h2>

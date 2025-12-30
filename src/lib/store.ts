@@ -110,6 +110,7 @@ export interface UserProfile {
   portfolioUrl?: string;
   email?: string;
   phone?: string;
+  avatarUrl?: string;
 }
 
 // Initial DSA topics
@@ -261,6 +262,7 @@ export const useStore = create<AppState>()(
         portfolioUrl: '',
         email: '',
         phone: '',
+        avatarUrl: '',
       },
       updateProfile: (updates) => set((state) => ({
         profile: { ...state.profile, ...updates }
