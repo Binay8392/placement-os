@@ -408,4 +408,10 @@ export const quotes = [
   { text: "Make it work, make it right, make it fast.", author: "Kent Beck" },
 ];
 
+export const getDailyQuote = () => {
+  const today = new Date();
+  const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+  return quotes[dayOfYear % quotes.length];
+};
+
 export const getRandomQuote = () => quotes[Math.floor(Math.random() * quotes.length)];
