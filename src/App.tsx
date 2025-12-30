@@ -13,6 +13,7 @@ import HabitsPage from "@/pages/HabitsPage";
 import DSAPage from "@/pages/DSAPage";
 import AptitudePage from "@/pages/AptitudePage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
+import PlacementsPage from "@/pages/PlacementsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/NotFound";
@@ -35,7 +36,7 @@ const App = () => (
                 <Route path="/habits" element={<HabitsPage />} />
                 <Route path="/dsa" element={<DSAPage />} />
                 <Route path="/aptitude" element={<AptitudePage />} />
-                <Route path="/placements" element={<ComingSoon title="Placement Tracker" description="Track your applications, interviews, and results." />} />
+                <Route path="/placements" element={<PlacementsPage />} />
                 <Route path="/calendar" element={<ComingSoon title="Calendar" description="Plan your study schedule and track deadlines." />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
                 <Route path="/reflect" element={<ComingSoon title="Daily Reflection" description="Reflect on your learning and growth." />} />

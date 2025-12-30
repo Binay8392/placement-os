@@ -47,6 +47,26 @@ export interface AptitudeTopic {
   notes: string;
 }
 
+export type ApplicationStatus = 'applied' | 'oa' | 'interview' | 'result';
+export type ApplicationResult = 'pending' | 'selected' | 'rejected' | 'waitlisted';
+
+export interface PlacementApplication {
+  id: string;
+  company: string;
+  role: string;
+  type: 'placement' | 'internship';
+  status: ApplicationStatus;
+  result: ApplicationResult;
+  appliedDate: string;
+  oaDate?: string;
+  interviewDate?: string;
+  resultDate?: string;
+  notes: string;
+  reminderDate?: string;
+  ctc?: string;
+  location?: string;
+}
+
 export interface UserProfile {
   name: string;
   degree: string;
@@ -161,6 +181,12 @@ interface AppState {
   // Reflections
   reflections: DailyReflection[];
   addReflection: (reflection: Omit<DailyReflection, 'id'>) => void;
+  
+  // Placement Applications
+  applications: PlacementApplication[];
+  addApplication: (app: Omit<PlacementApplication, 'id'>) => void;
+  updateApplication: (id: string, updates: Partial<PlacementApplication>) => void;
+  deleteApplication: (id: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -337,6 +363,20 @@ export const useStore = create<AppState>()(
       reflections: [],
       addReflection: (reflection) => set((state) => ({
         reflections: [...state.reflections, { ...reflection, id: Date.now().toString() }]
+      })),
+      
+      // Placement Applications
+      applications: [],
+      addApplication: (app) => set((state) => ({
+        applications: [...state.applications, { ...app, id: Date.now().toString() }]
+      })),
+      updateApplication: (id, updates) => set((state) => ({
+        applications: state.applications.map((a) =>
+          a.id === id ? { ...a, ...updates } : a
+        )
+      })),
+      deleteApplication: (id) => set((state) => ({
+        applications: state.applications.filter((a) => a.id !== id)
       })),
     }),
     {
