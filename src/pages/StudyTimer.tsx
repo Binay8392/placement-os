@@ -1,10 +1,11 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import { Play, Pause, Square, RotateCcw, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Square, RotateCcw, Volume2, VolumeX, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { soundManager, checkMilestone, getMilestoneName } from '@/lib/sounds';
 import { toast } from '@/hooks/use-toast';
+import { ManualTimeEntry } from '@/components/ManualTimeEntry';
 
 const categories = [
   { id: 'dsa' as const, label: 'DSA', color: 'bg-primary' },
@@ -119,18 +120,28 @@ export default function StudyTimer() {
             <h1 className="text-2xl font-bold">Study Timer</h1>
             <p className="text-muted-foreground text-sm">Track your learning sessions</p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className="rounded-full"
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-5 h-5" />
-            ) : (
-              <VolumeX className="w-5 h-5 text-muted-foreground" />
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <ManualTimeEntry 
+              trigger={
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Log</span>
+                </Button>
+              }
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="rounded-full"
+            >
+              {soundEnabled ? (
+                <Volume2 className="w-5 h-5" />
+              ) : (
+                <VolumeX className="w-5 h-5 text-muted-foreground" />
+              )}
+            </Button>
+          </div>
         </div>
       </header>
 
