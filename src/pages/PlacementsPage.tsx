@@ -812,6 +812,23 @@ export default function PlacementsPage() {
     .sort((a, b) => parseISO(a.reminderDate!).getTime() - parseISO(b.reminderDate!).getTime())
     .slice(0, 3);
 
+  // Upcoming govt exam dates and reminders
+  const upcomingGovtExams = govtExams
+    .filter(e => {
+      const hasUpcomingExam = e.examDate && isAfter(parseISO(e.examDate), new Date());
+      const hasUpcomingReminder = e.reminderDate && isAfter(parseISO(e.reminderDate), new Date());
+      return hasUpcomingExam || hasUpcomingReminder;
+    })
+    .map(e => ({
+      ...e,
+      nextDate: e.examDate && isAfter(parseISO(e.examDate), new Date()) 
+        ? parseISO(e.examDate) 
+        : e.reminderDate ? parseISO(e.reminderDate) : new Date(),
+      dateType: e.examDate && isAfter(parseISO(e.examDate), new Date()) ? 'exam' : 'reminder' as 'exam' | 'reminder'
+    }))
+    .sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime())
+    .slice(0, 5);
+
   const handleOpenDialog = (app?: PlacementApplication) => {
     setEditingApp(app);
     setDialogOpen(true);
@@ -1111,6 +1128,42 @@ export default function PlacementsPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Upcoming Exam Dates & Reminders */}
+            {upcomingGovtExams.length > 0 && (
+              <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Bell className="w-4 h-4 text-amber-400" />
+                    Upcoming Exams & Reminders
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {upcomingGovtExams.map(exam => (
+                      <div key={exam.id} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{exam.examName}</span>
+                          <span className="text-muted-foreground">- {exam.organization}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className={exam.dateType === 'exam' 
+                              ? 'bg-primary/10 text-primary border-primary/30' 
+                              : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
+                            }
+                          >
+                            {exam.dateType === 'exam' ? '📝 Exam' : '🔔 Reminder'}
+                          </Badge>
+                          <Badge variant="outline">{format(exam.nextDate, 'MMM d')}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Govt Filter Tabs & Exams */}
             <Tabs value={govtFilter} onValueChange={(v) => setGovtFilter(v as typeof govtFilter)}>
