@@ -1,4 +1,4 @@
-import { useStore, getTodayString, getRandomQuote, getStudyTimeForPeriod } from '@/lib/store';
+import { useStore, getTodayString, getDailyQuote, getStudyTimeForPeriod } from '@/lib/store';
 import { ProgressRing } from '@/components/ProgressRing';
 import { StatCard } from '@/components/StatCard';
 import { Clock, Target, Flame, BookOpen, Code2, Zap } from 'lucide-react';
@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 export default function Dashboard() {
   const { profile, habits, dsaTopics, studySessions } = useStore();
   const today = getTodayString();
-  const quote = useMemo(() => getRandomQuote(), []);
+  const quote = useMemo(() => getDailyQuote(), []);
 
   // Calculate stats
   const todaySessions = studySessions.filter((s) => s.date === today);
