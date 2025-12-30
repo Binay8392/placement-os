@@ -58,9 +58,11 @@ export function useSwipeNavigation() {
 
         if (deltaX > 0 && currentIndex > 0) {
           // Swipe right - go to previous page
+          if (navigator.vibrate) navigator.vibrate(15);
           navigate(routes[currentIndex - 1]);
         } else if (deltaX < 0 && currentIndex < routes.length - 1) {
           // Swipe left - go to next page
+          if (navigator.vibrate) navigator.vibrate(15);
           navigate(routes[currentIndex + 1]);
         }
       }
