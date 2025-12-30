@@ -87,6 +87,16 @@ export interface GovtExam {
   vacancies?: string;
 }
 
+export interface Resource {
+  id: string;
+  title: string;
+  link: string;
+  category: 'notes' | 'pdf' | 'video' | 'article' | 'other';
+  subject?: string;
+  description?: string;
+  createdAt: string;
+}
+
 export interface UserProfile {
   name: string;
   degree: string;
@@ -213,6 +223,12 @@ interface AppState {
   addGovtExam: (exam: Omit<GovtExam, 'id'>) => void;
   updateGovtExam: (id: string, updates: Partial<GovtExam>) => void;
   deleteGovtExam: (id: string) => void;
+  
+  // Resources
+  resources: Resource[];
+  addResource: (resource: Omit<Resource, 'id' | 'createdAt'>) => void;
+  updateResource: (id: string, updates: Partial<Resource>) => void;
+  deleteResource: (id: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -417,6 +433,24 @@ export const useStore = create<AppState>()(
       })),
       deleteGovtExam: (id) => set((state) => ({
         govtExams: state.govtExams.filter((e) => e.id !== id)
+      })),
+      
+      // Resources
+      resources: [],
+      addResource: (resource) => set((state) => ({
+        resources: [...state.resources, { 
+          ...resource, 
+          id: Date.now().toString(),
+          createdAt: new Date().toISOString()
+        }]
+      })),
+      updateResource: (id, updates) => set((state) => ({
+        resources: state.resources.map((r) =>
+          r.id === id ? { ...r, ...updates } : r
+        )
+      })),
+      deleteResource: (id) => set((state) => ({
+        resources: state.resources.filter((r) => r.id !== id)
       })),
     }),
     {
