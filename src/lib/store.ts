@@ -37,6 +37,16 @@ export interface DailyReflection {
   improve: string;
 }
 
+export interface AptitudeTopic {
+  id: string;
+  name: string;
+  section: 'quantitative' | 'logical' | 'verbal';
+  attempted: number;
+  correct: number;
+  lastPracticed: string | null;
+  notes: string;
+}
+
 export interface UserProfile {
   name: string;
   degree: string;
@@ -64,6 +74,45 @@ const initialDSATopics: DSATopic[] = [
   { id: 'dp', name: 'Dynamic Programming', category: 'advanced', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'greedy', name: 'Greedy Algorithms', category: 'advanced', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'backtracking', name: 'Backtracking', category: 'advanced', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
+];
+
+// Initial Aptitude topics
+const initialAptitudeTopics: AptitudeTopic[] = [
+  // Quantitative Aptitude
+  { id: 'numbers', name: 'Number Systems', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'percentages', name: 'Percentages', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'profit-loss', name: 'Profit & Loss', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'ratio', name: 'Ratio & Proportion', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'time-work', name: 'Time & Work', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'time-distance', name: 'Time, Speed & Distance', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'averages', name: 'Averages', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'algebra', name: 'Algebra', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'geometry', name: 'Geometry', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'probability', name: 'Probability', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'permutation', name: 'Permutation & Combination', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'di', name: 'Data Interpretation', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  
+  // Logical Reasoning
+  { id: 'puzzles', name: 'Puzzles', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'seating', name: 'Seating Arrangement', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'syllogism', name: 'Syllogism', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'blood-relation', name: 'Blood Relations', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'coding', name: 'Coding-Decoding', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'direction', name: 'Direction Sense', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'order-ranking', name: 'Order & Ranking', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'series', name: 'Number & Letter Series', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'analogy', name: 'Analogy', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'input-output', name: 'Input-Output', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  
+  // Verbal Ability
+  { id: 'rc', name: 'Reading Comprehension', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'vocabulary', name: 'Vocabulary', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'grammar', name: 'Grammar', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'parajumbles', name: 'Para Jumbles', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'sentence-correction', name: 'Sentence Correction', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'fill-blanks', name: 'Fill in the Blanks', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'synonyms', name: 'Synonyms & Antonyms', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
+  { id: 'idioms', name: 'Idioms & Phrases', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
 ];
 
 interface AppState {
@@ -103,6 +152,11 @@ interface AppState {
   // DSA Topics
   dsaTopics: DSATopic[];
   updateDSATopic: (id: string, updates: Partial<DSATopic>) => void;
+  
+  // Aptitude Topics
+  aptitudeTopics: AptitudeTopic[];
+  updateAptitudeTopic: (id: string, updates: Partial<AptitudeTopic>) => void;
+  logAptitudePractice: (id: string, attempted: number, correct: number) => void;
   
   // Reflections
   reflections: DailyReflection[];
@@ -256,6 +310,26 @@ export const useStore = create<AppState>()(
       updateDSATopic: (id, updates) => set((state) => ({
         dsaTopics: state.dsaTopics.map((t) =>
           t.id === id ? { ...t, ...updates } : t
+        )
+      })),
+      
+      // Aptitude Topics
+      aptitudeTopics: initialAptitudeTopics,
+      updateAptitudeTopic: (id, updates) => set((state) => ({
+        aptitudeTopics: state.aptitudeTopics.map((t) =>
+          t.id === id ? { ...t, ...updates } : t
+        )
+      })),
+      logAptitudePractice: (id, attempted, correct) => set((state) => ({
+        aptitudeTopics: state.aptitudeTopics.map((t) =>
+          t.id === id 
+            ? { 
+                ...t, 
+                attempted: t.attempted + attempted, 
+                correct: t.correct + correct,
+                lastPracticed: new Date().toISOString().split('T')[0]
+              } 
+            : t
         )
       })),
       
