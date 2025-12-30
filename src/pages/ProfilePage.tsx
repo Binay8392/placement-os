@@ -1,5 +1,5 @@
 import { useStore, Resource } from '@/lib/store';
-import { User, Target, Building2, Moon, Sun, FileText, Plus, ExternalLink, Trash2, Edit, Link2, Video, BookOpen, File } from 'lucide-react';
+import { User, Target, Building2, Moon, Sun, FileText, Plus, ExternalLink, Trash2, Edit, Link2, Video, BookOpen, File, Github, Linkedin, Globe, Mail, Phone, Code2, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -329,6 +329,183 @@ export default function ProfilePage() {
                 />
               )}
             </div>
+
+            {/* Skills */}
+            <div className="bg-card border border-border rounded-2xl p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-xl bg-purple-500/10">
+                  <Code2 className="w-5 h-5 text-purple-500" />
+                </div>
+                <h3 className="font-semibold">Skills</h3>
+              </div>
+              {!isEditing ? (
+                <div className="flex flex-wrap gap-2">
+                  {profile.skills?.length > 0 ? profile.skills.map((skill) => (
+                    <Badge key={skill} variant="secondary" className="text-sm">
+                      {skill}
+                    </Badge>
+                  )) : (
+                    <p className="text-muted-foreground text-sm">No skills added</p>
+                  )}
+                </div>
+              ) : (
+                <Input
+                  value={formData.skills?.join(', ') || ''}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    skills: e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                  })}
+                  placeholder="JavaScript, React, Python..."
+                />
+              )}
+            </div>
+
+            {/* Contact Info */}
+            <div className="bg-card border border-border rounded-2xl p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 rounded-xl bg-blue-500/10">
+                  <Mail className="w-5 h-5 text-blue-500" />
+                </div>
+                <h3 className="font-semibold">Contact</h3>
+              </div>
+              {!isEditing ? (
+                <div className="space-y-2 text-sm">
+                  {profile.email ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Mail className="w-4 h-4" />
+                      <span>{profile.email}</span>
+                    </div>
+                  ) : null}
+                  {profile.phone ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Phone className="w-4 h-4" />
+                      <span>{profile.phone}</span>
+                    </div>
+                  ) : null}
+                  {!profile.email && !profile.phone && (
+                    <p className="text-muted-foreground">No contact info added</p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    value={formData.email || ''}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Email address"
+                    type="email"
+                  />
+                  <Input
+                    value={formData.phone || ''}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    placeholder="Phone number"
+                  />
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Social Links & Resume */}
+          <section className="bg-card border border-border rounded-2xl p-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-xl bg-orange-500/10">
+                <Link2 className="w-5 h-5 text-orange-500" />
+              </div>
+              <h3 className="font-semibold">Links & Resume</h3>
+            </div>
+            {!isEditing ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {profile.linkedinUrl && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start"
+                    onClick={() => window.open(profile.linkedinUrl, '_blank')}
+                  >
+                    <Linkedin className="w-4 h-4 mr-2 text-blue-600" />
+                    LinkedIn
+                  </Button>
+                )}
+                {profile.githubUrl && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start"
+                    onClick={() => window.open(profile.githubUrl, '_blank')}
+                  >
+                    <Github className="w-4 h-4 mr-2" />
+                    GitHub
+                  </Button>
+                )}
+                {profile.portfolioUrl && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start"
+                    onClick={() => window.open(profile.portfolioUrl, '_blank')}
+                  >
+                    <Globe className="w-4 h-4 mr-2 text-green-500" />
+                    Portfolio
+                  </Button>
+                )}
+                {profile.resumeUrl && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="justify-start"
+                    onClick={() => window.open(profile.resumeUrl, '_blank')}
+                  >
+                    <FileDown className="w-4 h-4 mr-2 text-red-500" />
+                    Resume
+                  </Button>
+                )}
+                {!profile.linkedinUrl && !profile.githubUrl && !profile.portfolioUrl && !profile.resumeUrl && (
+                  <p className="text-muted-foreground text-sm col-span-full">No links added yet</p>
+                )}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Linkedin className="w-3 h-3" /> LinkedIn URL
+                  </Label>
+                  <Input
+                    value={formData.linkedinUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
+                    placeholder="https://linkedin.com/in/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Github className="w-3 h-3" /> GitHub URL
+                  </Label>
+                  <Input
+                    value={formData.githubUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
+                    placeholder="https://github.com/..."
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Globe className="w-3 h-3" /> Portfolio URL
+                  </Label>
+                  <Input
+                    value={formData.portfolioUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
+                    placeholder="https://yourportfolio.com"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                    <FileDown className="w-3 h-3" /> Resume URL (Drive/PDF)
+                  </Label>
+                  <Input
+                    value={formData.resumeUrl || ''}
+                    onChange={(e) => setFormData({ ...formData, resumeUrl: e.target.value })}
+                    placeholder="https://drive.google.com/..."
+                  />
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Theme Toggle */}
