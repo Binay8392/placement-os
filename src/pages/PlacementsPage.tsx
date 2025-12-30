@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Plus, 
   Building2, 
@@ -24,7 +25,9 @@ import {
   Trash2,
   Edit,
   Briefcase,
-  GraduationCap
+  GraduationCap,
+  Mail,
+  Send
 } from 'lucide-react';
 import { format, isAfter, parseISO } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
@@ -84,12 +87,19 @@ function StatusTimeline({ application }: { application: PlacementApplication }) 
   );
 }
 
-function CompanyCard({ application, onEdit }: { application: PlacementApplication; onEdit: () => void }) {
+function CompanyCard({ application, onEdit, onSendReminder }: { 
+  application: PlacementApplication; 
+  onEdit: () => void;
+  onSendReminder: (app: PlacementApplication, type: 'interview' | 'followup') => void;
+}) {
   const { deleteApplication } = useStore();
   const ResultIcon = resultIcons[application.result];
   
   const hasUpcomingReminder = application.reminderDate && 
     isAfter(parseISO(application.reminderDate), new Date());
+  
+  const hasUpcomingInterview = application.interviewDate && 
+    isAfter(parseISO(application.interviewDate), new Date());
 
   return (
     <Card className="hover:shadow-lg transition-all duration-300 hover:border-primary/30">
@@ -161,6 +171,19 @@ function CompanyCard({ application, onEdit }: { application: PlacementApplicatio
             <Edit className="w-4 h-4 mr-1" />
             Edit
           </Button>
+          {(hasUpcomingInterview || hasUpcomingReminder) && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="text-primary hover:text-primary"
+              onClick={() => onSendReminder(
+                application, 
+                hasUpcomingInterview ? 'interview' : 'followup'
+              )}
+            >
+              <Mail className="w-4 h-4" />
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="sm" 
@@ -368,10 +391,14 @@ function ApplicationForm({
 }
 
 export default function PlacementsPage() {
-  const { applications } = useStore();
+  const { applications, profile } = useStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingApp, setEditingApp] = useState<PlacementApplication | undefined>();
   const [filter, setFilter] = useState<'all' | 'placement' | 'internship'>('all');
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailData, setEmailData] = useState<{ app: PlacementApplication; type: 'interview' | 'followup' } | null>(null);
+  const [userEmail, setUserEmail] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   const filteredApps = applications.filter(app => 
     filter === 'all' || app.type === filter
@@ -397,6 +424,59 @@ export default function PlacementsPage() {
   const handleCloseDialog = () => {
     setEditingApp(undefined);
     setDialogOpen(false);
+  };
+
+  const handleSendReminder = (app: PlacementApplication, type: 'interview' | 'followup') => {
+    setEmailData({ app, type });
+    setEmailDialogOpen(true);
+  };
+
+  const sendEmailReminder = async () => {
+    if (!emailData || !userEmail.trim()) {
+      toast({ title: "Please enter your email", variant: "destructive" });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail.trim())) {
+      toast({ title: "Please enter a valid email", variant: "destructive" });
+      return;
+    }
+
+    setIsSending(true);
+    try {
+      const date = emailData.type === 'interview' 
+        ? emailData.app.interviewDate 
+        : emailData.app.reminderDate;
+
+      const { data, error } = await supabase.functions.invoke('send-reminder', {
+        body: {
+          email: userEmail.trim(),
+          company: emailData.app.company,
+          role: emailData.app.role,
+          type: emailData.type,
+          date: date ? format(parseISO(date), 'MMMM d, yyyy') : 'TBD',
+          notes: emailData.app.notes,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({ title: "Reminder email sent!", description: `Email sent to ${userEmail}` });
+      setEmailDialogOpen(false);
+      setUserEmail('');
+      setEmailData(null);
+    } catch (error: any) {
+      console.error('Error sending reminder:', error);
+      toast({ 
+        title: "Failed to send email", 
+        description: error.message || "Please try again later",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -528,12 +608,69 @@ export default function PlacementsPage() {
                     key={app.id} 
                     application={app} 
                     onEdit={() => handleOpenDialog(app)}
+                    onSendReminder={handleSendReminder}
                   />
                 ))}
               </div>
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Email Reminder Dialog */}
+        <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Send className="w-5 h-5 text-primary" />
+                Send Reminder Email
+              </DialogTitle>
+              <DialogDescription>
+                Get a reminder email for {emailData?.app.company} - {emailData?.app.role}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="reminderEmail">Your Email</Label>
+                <Input
+                  id="reminderEmail"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={userEmail}
+                  onChange={(e) => setUserEmail(e.target.value)}
+                />
+              </div>
+              <div className="bg-muted/50 p-3 rounded-lg text-sm">
+                <p className="font-medium mb-1">
+                  {emailData?.type === 'interview' ? '🎯 Interview Reminder' : '📋 Follow-up Reminder'}
+                </p>
+                <p className="text-muted-foreground">
+                  {emailData?.type === 'interview' 
+                    ? `Interview scheduled for ${emailData?.app.interviewDate ? format(parseISO(emailData.app.interviewDate), 'MMMM d, yyyy') : 'TBD'}`
+                    : `Follow up on ${emailData?.app.reminderDate ? format(parseISO(emailData.app.reminderDate), 'MMMM d, yyyy') : 'TBD'}`
+                  }
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={sendEmailReminder} disabled={isSending} className="gradient-primary">
+                {isSending ? (
+                  <>
+                    <Clock className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send Email
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
