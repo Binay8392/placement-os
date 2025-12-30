@@ -15,8 +15,8 @@ import AptitudePage from "@/pages/AptitudePage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import PlacementsPage from "@/pages/PlacementsPage";
 import CalendarPage from "@/pages/CalendarPage";
+import ReflectPage from "@/pages/ReflectPage";
 import ProfilePage from "@/pages/ProfilePage";
-import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,7 +40,7 @@ const App = () => (
                 <Route path="/placements" element={<PlacementsPage />} />
                 <Route path="/calendar" element={<CalendarPage />} />
                 <Route path="/analytics" element={<AnalyticsPage />} />
-                <Route path="/reflect" element={<ComingSoon title="Daily Reflection" description="Reflect on your learning and growth." />} />
+                <Route path="/reflect" element={<ReflectPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
