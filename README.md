@@ -22,5 +22,6 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+free for all , use it for your placement journey ---
+thanks bolna mat bhulna 
+       -your fav BINAY bhaiya
