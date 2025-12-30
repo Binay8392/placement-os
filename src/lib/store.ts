@@ -67,6 +67,26 @@ export interface PlacementApplication {
   location?: string;
 }
 
+export type GovtExamStatus = 'form-filled' | 'admit-card' | 'prelims' | 'mains' | 'interview' | 'result';
+export type GovtExamResult = 'pending' | 'qualified' | 'not-qualified' | 'waitlisted';
+
+export interface GovtExam {
+  id: string;
+  examName: string;
+  organization: string;
+  category: 'banking' | 'ssc' | 'railway' | 'upsc' | 'state-psc' | 'other';
+  status: GovtExamStatus;
+  result: GovtExamResult;
+  formFilledDate: string;
+  examDate?: string;
+  admitCardDate?: string;
+  resultDate?: string;
+  notes: string;
+  reminderDate?: string;
+  postName?: string;
+  vacancies?: string;
+}
+
 export interface UserProfile {
   name: string;
   degree: string;
@@ -187,6 +207,12 @@ interface AppState {
   addApplication: (app: Omit<PlacementApplication, 'id'>) => void;
   updateApplication: (id: string, updates: Partial<PlacementApplication>) => void;
   deleteApplication: (id: string) => void;
+  
+  // Govt/Banking Exams
+  govtExams: GovtExam[];
+  addGovtExam: (exam: Omit<GovtExam, 'id'>) => void;
+  updateGovtExam: (id: string, updates: Partial<GovtExam>) => void;
+  deleteGovtExam: (id: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -377,6 +403,20 @@ export const useStore = create<AppState>()(
       })),
       deleteApplication: (id) => set((state) => ({
         applications: state.applications.filter((a) => a.id !== id)
+      })),
+      
+      // Govt/Banking Exams
+      govtExams: [],
+      addGovtExam: (exam) => set((state) => ({
+        govtExams: [...state.govtExams, { ...exam, id: Date.now().toString() }]
+      })),
+      updateGovtExam: (id, updates) => set((state) => ({
+        govtExams: state.govtExams.map((e) =>
+          e.id === id ? { ...e, ...updates } : e
+        )
+      })),
+      deleteGovtExam: (id) => set((state) => ({
+        govtExams: state.govtExams.filter((e) => e.id !== id)
       })),
     }),
     {
