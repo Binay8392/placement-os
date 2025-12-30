@@ -11,6 +11,7 @@ import Dashboard from "@/pages/Dashboard";
 import StudyTimer from "@/pages/StudyTimer";
 import HabitsPage from "@/pages/HabitsPage";
 import DSAPage from "@/pages/DSAPage";
+import AptitudePage from "@/pages/AptitudePage";
 import ProfilePage from "@/pages/ProfilePage";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/NotFound";
@@ -32,7 +33,7 @@ const App = () => (
                 <Route path="/timer" element={<StudyTimer />} />
                 <Route path="/habits" element={<HabitsPage />} />
                 <Route path="/dsa" element={<DSAPage />} />
-                <Route path="/aptitude" element={<ComingSoon title="Aptitude Prep" description="Practice quantitative, logical reasoning, and verbal ability." />} />
+                <Route path="/aptitude" element={<AptitudePage />} />
                 <Route path="/placements" element={<ComingSoon title="Placement Tracker" description="Track your applications, interviews, and results." />} />
                 <Route path="/calendar" element={<ComingSoon title="Calendar" description="Plan your study schedule and track deadlines." />} />
                 <Route path="/analytics" element={<ComingSoon title="Analytics" description="View detailed insights about your progress." />} />
