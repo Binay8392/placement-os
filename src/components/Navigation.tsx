@@ -11,7 +11,8 @@ import {
   Calendar,
   BarChart3,
   Lightbulb,
-  MoreHorizontal
+  MoreHorizontal,
+  LogOut
 } from 'lucide-react';
 import {
   Drawer,
@@ -21,6 +22,8 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
@@ -54,7 +57,13 @@ const allNavItems = [
 export function BottomNav() {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const { user, signOut } = useAuth();
   const isMoreActive = moreNavItems.some(item => location.pathname === item.to);
+
+  // Don't show nav on auth page
+  if (location.pathname === '/auth') {
+    return null;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
@@ -114,7 +123,7 @@ export function BottomNav() {
               <DrawerHeader>
                 <DrawerTitle>More Features</DrawerTitle>
               </DrawerHeader>
-              <div className="p-4 pb-8 grid grid-cols-3 gap-4">
+              <div className="p-4 pb-4 grid grid-cols-3 gap-4">
                 {moreNavItems.map(({ to, icon: Icon, label }) => {
                   const isActive = location.pathname === to;
                   return (
@@ -135,6 +144,21 @@ export function BottomNav() {
                   );
                 })}
               </div>
+              {user && (
+                <div className="px-4 pb-8 pt-2 border-t border-border">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-center text-muted-foreground"
+                    onClick={() => {
+                      signOut();
+                      setDrawerOpen(false);
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              )}
             </DrawerContent>
           </Drawer>
         </div>
@@ -145,6 +169,12 @@ export function BottomNav() {
 
 export function DesktopSidebar() {
   const location = useLocation();
+  const { user, signOut } = useAuth();
+
+  // Don't show sidebar on auth page
+  if (location.pathname === '/auth') {
+    return null;
+  }
 
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 border-r border-border bg-sidebar p-4">
@@ -180,7 +210,17 @@ export function DesktopSidebar() {
         })}
       </nav>
       
-      <div className="pt-4 border-t border-border">
+      <div className="pt-4 border-t border-border space-y-3">
+        {user && (
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={signOut}
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        )}
         <p className="text-xs text-muted-foreground text-center">
           Stay focused. Stay consistent.
         </p>
