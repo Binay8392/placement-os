@@ -4,12 +4,13 @@ import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Phone, ArrowLeft, GraduationCap } from 'lucide-react';
+import { Loader2, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { Logo } from '@/components/Logo';
 
 type AuthView = 'main' | 'forgot' | 'phone-otp';
 
@@ -174,12 +175,9 @@ export default function FirebaseAuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
-            <GraduationCap className="h-7 w-7 text-primary" />
-            PrepTrack
-          </CardTitle>
-          <CardDescription>
+        <CardHeader className="text-center flex flex-col items-center">
+          <Logo size="lg" className="mb-2" />
+          <CardDescription className="mt-3">
             {view === 'forgot' ? 'Reset your password' : 
              view === 'phone-otp' ? 'Sign in with phone' : 
              'Sign in to track your progress'}

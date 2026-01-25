@@ -24,6 +24,7 @@ import {
 import { useState } from 'react';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { Button } from '@/components/ui/button';
+import { Logo } from '@/components/Logo';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
@@ -179,8 +180,7 @@ export function DesktopSidebar() {
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 border-r border-border bg-sidebar p-4">
       <div className="mb-8">
-        <h1 className="text-xl font-bold text-gradient">PrepTrack OS</h1>
-        <p className="text-xs text-muted-foreground mt-1">Personal Placement System</p>
+        <Logo size="md" showTagline />
       </div>
       
       <nav className="flex-1 space-y-1">
