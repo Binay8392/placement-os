@@ -22,7 +22,7 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { Button } from '@/components/ui/button';
 
 const navItems = [
@@ -57,7 +57,7 @@ const allNavItems = [
 export function BottomNav() {
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useFirebaseAuth();
   const isMoreActive = moreNavItems.some(item => location.pathname === item.to);
 
   // Don't show nav on auth page
@@ -169,7 +169,7 @@ export function BottomNav() {
 
 export function DesktopSidebar() {
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, signOut } = useFirebaseAuth();
 
   // Don't show sidebar on auth page
   if (location.pathname === '/auth') {
