@@ -71,7 +71,7 @@ export function Logo({ size = 'md', showTagline = false, className }: LogoProps)
           'font-semibold tracking-tight text-foreground',
           sizes[size].text
         )}>
-          Prep<span className="text-primary">Track</span>
+          Prep<span className="text-primary">Track</span> <span className="font-normal text-muted-foreground">OS</span>
         </span>
       </div>
       
