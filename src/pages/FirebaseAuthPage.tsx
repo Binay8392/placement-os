@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Mail, Phone, ArrowLeft } from 'lucide-react';
+import { Loader2, Mail, Phone, ArrowLeft, GraduationCap } from 'lucide-react';
 import { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
@@ -175,7 +175,10 @@ export default function FirebaseAuthPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">PrepTrack</CardTitle>
+          <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
+            <GraduationCap className="h-7 w-7 text-primary" />
+            PrepTrack
+          </CardTitle>
           <CardDescription>
             {view === 'forgot' ? 'Reset your password' : 
              view === 'phone-otp' ? 'Sign in with phone' : 
