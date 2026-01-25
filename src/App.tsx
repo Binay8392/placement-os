@@ -4,8 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { AuthProvider } from "@/hooks/useAuth";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { FirebaseAuthProvider } from "@/hooks/useFirebaseAuth";
+import { FirebaseProtectedRoute } from "@/components/FirebaseProtectedRoute";
 import { BottomNav, DesktopSidebar } from "@/components/Navigation";
 import { useSwipeNavigation } from "@/hooks/use-swipe-navigation";
 
@@ -20,7 +20,7 @@ import PlacementsPage from "@/pages/PlacementsPage";
 import CalendarPage from "@/pages/CalendarPage";
 import ReflectPage from "@/pages/ReflectPage";
 import ProfilePage from "@/pages/ProfilePage";
-import AuthPage from "@/pages/AuthPage";
+import FirebaseAuthPage from "@/pages/FirebaseAuthPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,17 +33,17 @@ function AppContent() {
       <DesktopSidebar />
       <main className="flex-1 md:ml-64">
         <Routes>
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-          <Route path="/timer" element={<ProtectedRoute><StudyTimer /></ProtectedRoute>} />
-          <Route path="/habits" element={<ProtectedRoute><HabitsPage /></ProtectedRoute>} />
-          <Route path="/dsa" element={<ProtectedRoute><DSAPage /></ProtectedRoute>} />
-          <Route path="/aptitude" element={<ProtectedRoute><AptitudePage /></ProtectedRoute>} />
-          <Route path="/placements" element={<ProtectedRoute><PlacementsPage /></ProtectedRoute>} />
-          <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-          <Route path="/analytics" element={<ProtectedRoute><AnalyticsPage /></ProtectedRoute>} />
-          <Route path="/reflect" element={<ProtectedRoute><ReflectPage /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/auth" element={<FirebaseAuthPage />} />
+          <Route path="/" element={<FirebaseProtectedRoute><Dashboard /></FirebaseProtectedRoute>} />
+          <Route path="/timer" element={<FirebaseProtectedRoute><StudyTimer /></FirebaseProtectedRoute>} />
+          <Route path="/habits" element={<FirebaseProtectedRoute><HabitsPage /></FirebaseProtectedRoute>} />
+          <Route path="/dsa" element={<FirebaseProtectedRoute><DSAPage /></FirebaseProtectedRoute>} />
+          <Route path="/aptitude" element={<FirebaseProtectedRoute><AptitudePage /></FirebaseProtectedRoute>} />
+          <Route path="/placements" element={<FirebaseProtectedRoute><PlacementsPage /></FirebaseProtectedRoute>} />
+          <Route path="/calendar" element={<FirebaseProtectedRoute><CalendarPage /></FirebaseProtectedRoute>} />
+          <Route path="/analytics" element={<FirebaseProtectedRoute><AnalyticsPage /></FirebaseProtectedRoute>} />
+          <Route path="/reflect" element={<FirebaseProtectedRoute><ReflectPage /></FirebaseProtectedRoute>} />
+          <Route path="/profile" element={<FirebaseProtectedRoute><ProfilePage /></FirebaseProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -55,7 +55,7 @@ function AppContent() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <AuthProvider>
+      <FirebaseAuthProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -63,7 +63,7 @@ const App = () => (
             <AppContent />
           </BrowserRouter>
         </TooltipProvider>
-      </AuthProvider>
+      </FirebaseAuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
