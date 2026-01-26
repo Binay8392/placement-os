@@ -23,11 +23,11 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
   sendPhoneOTP: (phoneNumber: string, recaptchaVerifier: RecaptchaVerifier) => Promise<{ error: Error | null; confirmationResult?: ConfirmationResult }>;
+  setupRecaptcha: (containerId: string, existingVerifier?: RecaptchaVerifier | null) => RecaptchaVerifier;
   verifyPhoneOTP: (confirmationResult: ConfirmationResult, otp: string) => Promise<{ error: Error | null }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
   updateUserPassword: (newPassword: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  setupRecaptcha: (containerId: string) => RecaptchaVerifier;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,7 +79,22 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const setupRecaptcha = (containerId: string) => {
+  const setupRecaptcha = (containerId: string, existingVerifier?: RecaptchaVerifier | null) => {
+    // Clear existing verifier if present
+    if (existingVerifier) {
+      try {
+        existingVerifier.clear();
+      } catch (e) {
+        // Ignore clear errors
+      }
+    }
+    
+    // Clear the container element
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.innerHTML = '';
+    }
+    
     return new RecaptchaVerifier(auth, containerId, {
       size: 'invisible',
       callback: () => {
