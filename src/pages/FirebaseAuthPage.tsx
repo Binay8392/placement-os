@@ -103,9 +103,8 @@ export default function FirebaseAuthPage() {
     setIsSubmitting(true);
     
     try {
-      if (!recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current = setupRecaptcha('recaptcha-container');
-      }
+      // Clear existing verifier and create new one
+      recaptchaVerifierRef.current = setupRecaptcha('recaptcha-container', recaptchaVerifierRef.current);
 
       const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
       const { error, confirmationResult: result } = await sendPhoneOTP(formattedPhone, recaptchaVerifierRef.current);
@@ -116,6 +115,12 @@ export default function FirebaseAuthPage() {
           description: error.message,
           variant: "destructive",
         });
+        // Clear on error for retry
+        if (recaptchaVerifierRef.current) {
+          try {
+            recaptchaVerifierRef.current.clear();
+          } catch (e) {}
+        }
         recaptchaVerifierRef.current = null;
       } else if (result) {
         setConfirmationResult(result);
@@ -130,6 +135,12 @@ export default function FirebaseAuthPage() {
         description: error.message,
         variant: "destructive",
       });
+      // Clear on error for retry
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+        } catch (e) {}
+      }
       recaptchaVerifierRef.current = null;
     }
     
@@ -236,6 +247,13 @@ export default function FirebaseAuthPage() {
                   setConfirmationResult(null);
                   setOtp('');
                   setPhoneNumber('');
+                  // Clear reCAPTCHA when going back
+                  if (recaptchaVerifierRef.current) {
+                    try {
+                      recaptchaVerifierRef.current.clear();
+                    } catch (e) {}
+                  }
+                  recaptchaVerifierRef.current = null;
                 }}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
