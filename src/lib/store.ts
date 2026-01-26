@@ -250,12 +250,12 @@ export const useStore = create<AppState>()(
       
       // Profile
       profile: {
-        name: 'Binay Paramanik',
-        degree: 'B.Tech in Computer Science & Engineering',
-        semester: 6,
-        targetCompanies: ['Google', 'Microsoft', 'Amazon', 'Meta'],
-        careerGoals: 'Software Engineer at a top tech company',
-        skills: ['JavaScript', 'React', 'Python', 'DSA'],
+        name: '',
+        degree: '',
+        semester: 1,
+        targetCompanies: [],
+        careerGoals: '',
+        skills: [],
         resumeUrl: '',
         linkedinUrl: '',
         githubUrl: '',
