@@ -9,7 +9,7 @@ export default function Dashboard() {
   const { habits, dsaTopics, studySessions } = useStore();
   const { user } = useFirebaseAuth();
   
-  // Get user's first name from Firebase auth
+  // Get user's first name from Firebase auth display name
   const userName = user?.displayName?.split(' ')[0] || 'User';
   const today = getTodayString();
   const quote = useMemo(() => getDailyQuote(), []);
