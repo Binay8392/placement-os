@@ -4,6 +4,7 @@ import { StatCard } from '@/components/StatCard';
 import { Clock, Target, Flame, BookOpen, Code2, Zap } from 'lucide-react';
 import { useMemo } from 'react';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { Link } from 'react-router-dom';
 
 export default function Dashboard() {
   const { habits, dsaTopics, studySessions } = useStore();
@@ -48,9 +49,20 @@ export default function Dashboard() {
             <p className="text-muted-foreground text-sm">Good morning,</p>
             <h1 className="text-2xl font-bold">{userName} 👋</h1>
           </div>
-          <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold">
-            {userName.charAt(0)}
-          </div>
+          <Link 
+            to="/profile"
+            className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all"
+          >
+            {user?.photoURL ? (
+              <img 
+                src={user.photoURL} 
+                alt={userName} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              userName.charAt(0)
+            )}
+          </Link>
         </div>
         
         {/* Quote */}
