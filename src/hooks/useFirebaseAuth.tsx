@@ -50,6 +50,9 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       if (name && result.user) {
         await updateProfile(result.user, { displayName: name });
+        // Refresh the user state to include the updated displayName
+        await result.user.reload();
+        setUser({ ...result.user });
       }
       return { error: null };
     } catch (error) {
