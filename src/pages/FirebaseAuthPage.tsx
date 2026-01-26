@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,18 +12,22 @@ import { Loader2, Mail, Phone, ArrowLeft } from 'lucide-react';
 import { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Logo } from '@/components/Logo';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type AuthView = 'main' | 'forgot' | 'phone-otp';
 
 export default function FirebaseAuthPage() {
   const navigate = useNavigate();
   const { user, loading, signUp, signIn, signInWithGoogle, sendPhoneOTP, verifyPhoneOTP, resetPassword, setupRecaptcha } = useFirebaseAuth();
+  const { updateProfile } = useStore();
   const { toast } = useToast();
 
   const [view, setView] = useState<AuthView>('main');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [degree, setDegree] = useState('');
+  const [semester, setSemester] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +68,13 @@ export default function FirebaseAuthPage() {
         variant: "destructive",
       });
     } else {
+      // Sync profile with signup details
+      updateProfile({
+        name: name || 'User',
+        degree: degree || '',
+        semester: parseInt(semester) || 1,
+        email: email,
+      });
       toast({
         title: "Account created!",
         description: "You're now signed in.",
@@ -381,17 +393,18 @@ export default function FirebaseAuthPage() {
                 <TabsContent value="signup">
                   <form onSubmit={handleEmailSignUp} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Name</Label>
+                      <Label htmlFor="name">Full Name *</Label>
                       <Input
                         id="name"
                         type="text"
-                        placeholder="Your name"
+                        placeholder="Your full name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-email">Email</Label>
+                      <Label htmlFor="signup-email">Email *</Label>
                       <Input
                         id="signup-email"
                         type="email"
@@ -402,7 +415,7 @@ export default function FirebaseAuthPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="signup-password">Password</Label>
+                      <Label htmlFor="signup-password">Password *</Label>
                       <Input
                         id="signup-password"
                         type="password"
@@ -412,6 +425,33 @@ export default function FirebaseAuthPage() {
                         required
                         minLength={6}
                       />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="degree">Degree</Label>
+                        <Input
+                          id="degree"
+                          type="text"
+                          placeholder="B.Tech CSE"
+                          value={degree}
+                          onChange={(e) => setDegree(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="semester">Semester</Label>
+                        <Select value={semester} onValueChange={setSemester}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                              <SelectItem key={sem} value={sem.toString()}>
+                                Semester {sem}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

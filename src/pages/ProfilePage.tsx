@@ -1,9 +1,10 @@
 import { useStore, Resource } from '@/lib/store';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { User, Target, Building2, Moon, Sun, FileText, Plus, ExternalLink, Trash2, Edit, Link2, Video, BookOpen, File, Github, Linkedin, Globe, Mail, Phone, Code2, FileDown, Camera, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -211,6 +212,7 @@ function ResourceCard({ resource, onEdit }: { resource: Resource; onEdit: () => 
 
 export default function ProfilePage() {
   const { profile, updateProfile, theme, toggleTheme, resources } = useStore();
+  const { user } = useFirebaseAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(profile);
   const [resourceDialogOpen, setResourceDialogOpen] = useState(false);
@@ -218,6 +220,21 @@ export default function ProfilePage() {
   const [resourceFilter, setResourceFilter] = useState<'all' | Resource['category']>('all');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync profile name with Firebase auth if profile name is empty
+  useEffect(() => {
+    if (user?.displayName && !profile.name) {
+      updateProfile({ 
+        name: user.displayName,
+        email: user.email || profile.email 
+      });
+    }
+  }, [user, profile.name, updateProfile]);
+
+  // Update formData when profile changes
+  useEffect(() => {
+    setFormData(profile);
+  }, [profile]);
 
   const handleSave = () => {
     updateProfile(formData);
@@ -338,15 +355,15 @@ export default function ProfilePage() {
                 className="hidden"
                 id="avatar-upload"
               />
-              {profile.avatarUrl ? (
+              {profile.avatarUrl || user?.photoURL ? (
                 <img
-                  src={profile.avatarUrl}
-                  alt={profile.name}
+                  src={profile.avatarUrl || user?.photoURL || ''}
+                  alt={profile.name || user?.displayName || 'Profile'}
                   className="w-24 h-24 rounded-full object-cover border-4 border-primary/20"
                 />
               ) : (
                 <div className="w-24 h-24 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-3xl font-bold">
-                  {profile.name.charAt(0)}
+                  {(profile.name || user?.displayName || 'U').charAt(0).toUpperCase()}
                 </div>
               )}
               
@@ -377,9 +394,9 @@ export default function ProfilePage() {
             
             {!isEditing ? (
               <>
-                <h2 className="text-xl font-bold">{profile.name}</h2>
-                <p className="text-muted-foreground text-sm">{profile.degree}</p>
-                <p className="text-muted-foreground text-sm">Semester {profile.semester}</p>
+                <h2 className="text-xl font-bold">{profile.name || user?.displayName || 'Your Name'}</h2>
+                <p className="text-muted-foreground text-sm">{profile.degree || 'Add your degree'}</p>
+                {profile.semester > 0 && <p className="text-muted-foreground text-sm">Semester {profile.semester}</p>}
               </>
             ) : (
               <div className="w-full max-w-md space-y-3 mt-2">
