@@ -154,8 +154,8 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         <section className="grid grid-cols-2 gap-3">
-          <a 
-            href="/timer" 
+          <Link 
+            to="/timer" 
             className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/50 transition-colors"
           >
             <div className="p-2 rounded-xl gradient-primary">
@@ -165,10 +165,10 @@ export default function Dashboard() {
               <p className="font-medium text-sm">Start Timer</p>
               <p className="text-xs text-muted-foreground">Track study time</p>
             </div>
-          </a>
+          </Link>
           
-          <a 
-            href="/dsa" 
+          <Link 
+            to="/dsa" 
             className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/50 transition-colors"
           >
             <div className="p-2 rounded-xl gradient-success">
@@ -178,7 +178,7 @@ export default function Dashboard() {
               <p className="font-medium text-sm">DSA Practice</p>
               <p className="text-xs text-muted-foreground">Continue learning</p>
             </div>
-          </a>
+          </Link>
         </section>
       </main>
     </div>
