@@ -3,9 +3,14 @@ import { ProgressRing } from '@/components/ProgressRing';
 import { StatCard } from '@/components/StatCard';
 import { Clock, Target, Flame, BookOpen, Code2, Zap } from 'lucide-react';
 import { useMemo } from 'react';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 
 export default function Dashboard() {
-  const { profile, habits, dsaTopics, studySessions } = useStore();
+  const { habits, dsaTopics, studySessions } = useStore();
+  const { user } = useFirebaseAuth();
+  
+  // Get user's first name from Firebase auth
+  const userName = user?.displayName?.split(' ')[0] || 'User';
   const today = getTodayString();
   const quote = useMemo(() => getDailyQuote(), []);
 
@@ -41,10 +46,10 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-muted-foreground text-sm">Good morning,</p>
-            <h1 className="text-2xl font-bold">{profile.name.split(' ')[0]} 👋</h1>
+            <h1 className="text-2xl font-bold">{userName} 👋</h1>
           </div>
           <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold">
-            {profile.name.charAt(0)}
+            {userName.charAt(0)}
           </div>
         </div>
         
