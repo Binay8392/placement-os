@@ -86,7 +86,7 @@ export default function CommunityPage() {
 
 // ── Experiences Tab ──
 function ExperiencesTab({ search, companyFilter }: { search: string; companyFilter: string }) {
-  const { communityExperiences, addCommunityExperience, deleteCommunityExperience, likeCommunityExperience, addExperienceComment } = useStore();
+  const { communityExperiences, addCommunityExperience, deleteCommunityExperience, likeCommunityExperience, addExperienceComment, deleteExperienceComment } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ company: 'TCS', role: '', interviewDate: '', difficulty: 'Medium' as const, rounds: '', questions: '', tips: '' });
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
@@ -173,8 +173,8 @@ function ExperiencesTab({ search, companyFilter }: { search: string; companyFilt
               {exp.questions && <div><p className="text-xs font-medium text-muted-foreground mb-1">Questions:</p><p className="text-xs text-foreground whitespace-pre-line">{exp.questions}</p></div>}
               {exp.tips && <div className="bg-muted/40 rounded-lg p-2"><p className="text-xs font-medium text-muted-foreground mb-1">💡 Tips:</p><p className="text-xs">{exp.tips}</p></div>}
               <div className="flex items-center gap-3 pt-1">
-                <button onClick={() => likeCommunityExperience(exp.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-                  <Heart className="w-3.5 h-3.5" /> {exp.likes}
+                <button onClick={() => likeCommunityExperience(exp.id, getUserId())} className={cn("flex items-center gap-1 text-xs transition-colors", (exp.likedBy || []).includes(getUserId()) ? "text-primary" : "text-muted-foreground hover:text-primary")}>
+                  <Heart className={cn("w-3.5 h-3.5", (exp.likedBy || []).includes(getUserId()) && "fill-primary")} /> {exp.likes}
                 </button>
                 <button onClick={() => setExpandedComments(expandedComments === exp.id ? null : exp.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                   <MessageSquare className="w-3.5 h-3.5" /> {comments.length} comment{comments.length !== 1 ? 's' : ''}
@@ -191,10 +191,17 @@ function ExperiencesTab({ search, companyFilter }: { search: string; companyFilt
               <div className="border-t border-border">
                 {comments.map(c => (
                   <div key={c.id} className="px-4 py-2 border-b border-border last:border-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{c.username.charAt(0).toUpperCase()}</div>
-                      <span className="text-xs font-medium">{c.username}</span>
-                      <span className="text-[10px] text-muted-foreground">{timeAgo(c.createdAt)}</span>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{c.username.charAt(0).toUpperCase()}</div>
+                        <span className="text-xs font-medium">{c.username}</span>
+                        <span className="text-[10px] text-muted-foreground">{timeAgo(c.createdAt)}</span>
+                      </div>
+                      {c.userId === getUserId() && (
+                        <button onClick={() => { deleteExperienceComment(exp.id, c.id); toast.success('Comment deleted'); }} className="text-muted-foreground hover:text-destructive transition-colors">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                     <p className="text-xs ml-7">{c.text}</p>
                   </div>
@@ -284,8 +291,8 @@ function QuestionsTab({ search, companyFilter }: { search: string; companyFilter
             <h3 className="font-semibold text-sm">{q.title}</h3>
             {q.description && <p className="text-xs text-muted-foreground">{q.description}</p>}
             <div className="flex items-center gap-3">
-              <button onClick={() => likeCommunityQuestion(q.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-                <Heart className="w-3.5 h-3.5" /> {q.likes}
+              <button onClick={() => likeCommunityQuestion(q.id, getUserId())} className={cn("flex items-center gap-1 text-xs transition-colors", (q.likedBy || []).includes(getUserId()) ? "text-primary" : "text-muted-foreground hover:text-primary")}>
+                <Heart className={cn("w-3.5 h-3.5", (q.likedBy || []).includes(getUserId()) && "fill-primary")} /> {q.likes}
               </button>
               <button onClick={() => setExpandedQ(expandedQ === q.id ? null : q.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                 <MessageSquare className="w-3.5 h-3.5" /> {q.answers.length} answer{q.answers.length !== 1 ? 's' : ''}
@@ -305,7 +312,7 @@ function QuestionsTab({ search, companyFilter }: { search: string; companyFilter
                 <div key={a.id} className={cn("p-3 border-b border-border last:border-0", q.bestAnswerId === a.id && "bg-primary/5")}>
                   <div className="flex items-start gap-2">
                     <div className="flex flex-col items-center gap-1">
-                      <button onClick={() => upvoteCommunityAnswer(q.id, a.id)} className="text-muted-foreground hover:text-primary transition-colors">
+                      <button onClick={() => upvoteCommunityAnswer(q.id, a.id, getUserId())} className={cn("transition-colors", (a.upvotedBy || []).includes(getUserId()) ? "text-primary" : "text-muted-foreground hover:text-primary")}>
                         <ChevronUp className="w-4 h-4" />
                       </button>
                       <span className="text-xs font-bold">{a.upvotes}</span>
@@ -344,7 +351,7 @@ function QuestionsTab({ search, companyFilter }: { search: string; companyFilter
 
 // ── Vlogs Tab ──
 function VlogsTab({ search, companyFilter }: { search: string; companyFilter: string }) {
-  const { communityVlogs, addCommunityVlog, deleteCommunityVlog, likeCommunityVlog, addVlogComment } = useStore();
+  const { communityVlogs, addCommunityVlog, deleteCommunityVlog, likeCommunityVlog, addVlogComment, deleteVlogComment } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', company: 'TCS', videoUrl: '', type: 'youtube' as const, textContent: '' });
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
@@ -447,8 +454,8 @@ function VlogsTab({ search, companyFilter }: { search: string; companyFilter: st
                 </a>
               )}
               <div className="flex items-center gap-3 pt-1">
-                <button onClick={() => likeCommunityVlog(vlog.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-                  <Heart className="w-3.5 h-3.5" /> {vlog.likes}
+                <button onClick={() => likeCommunityVlog(vlog.id, getUserId())} className={cn("flex items-center gap-1 text-xs transition-colors", (vlog.likedBy || []).includes(getUserId()) ? "text-primary" : "text-muted-foreground hover:text-primary")}>
+                  <Heart className={cn("w-3.5 h-3.5", (vlog.likedBy || []).includes(getUserId()) && "fill-primary")} /> {vlog.likes}
                 </button>
                 <button onClick={() => setExpandedComments(expandedComments === vlog.id ? null : vlog.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                   <MessageSquare className="w-3.5 h-3.5" /> {comments.length} comment{comments.length !== 1 ? 's' : ''}
@@ -465,10 +472,17 @@ function VlogsTab({ search, companyFilter }: { search: string; companyFilter: st
               <div className="border-t border-border">
                 {comments.map(c => (
                   <div key={c.id} className="px-4 py-2 border-b border-border last:border-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{c.username.charAt(0).toUpperCase()}</div>
-                      <span className="text-xs font-medium">{c.username}</span>
-                      <span className="text-[10px] text-muted-foreground">{timeAgo(c.createdAt)}</span>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{c.username.charAt(0).toUpperCase()}</div>
+                        <span className="text-xs font-medium">{c.username}</span>
+                        <span className="text-[10px] text-muted-foreground">{timeAgo(c.createdAt)}</span>
+                      </div>
+                      {c.userId === getUserId() && (
+                        <button onClick={() => { deleteVlogComment(vlog.id, c.id); toast.success('Comment deleted'); }} className="text-muted-foreground hover:text-destructive transition-colors">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                     <p className="text-xs ml-7">{c.text}</p>
                   </div>

@@ -184,6 +184,7 @@ export interface CommunityExperience {
   questions: string;
   tips: string;
   likes: number;
+  likedBy: string[];
   comments: CommunityComment[];
   createdAt: string;
 }
@@ -198,6 +199,7 @@ export interface CommunityQuestion {
   answers: CommunityAnswer[];
   bestAnswerId?: string;
   likes: number;
+  likedBy: string[];
   createdAt: string;
 }
 
@@ -207,6 +209,7 @@ export interface CommunityAnswer {
   username: string;
   answerText: string;
   upvotes: number;
+  upvotedBy: string[];
   createdAt: string;
 }
 
@@ -221,6 +224,7 @@ export interface CommunityVlog {
   type: 'youtube' | 'text';
   textContent?: string;
   likes: number;
+  likedBy: string[];
   comments: CommunityComment[];
   createdAt: string;
 }
@@ -368,24 +372,26 @@ interface AppState {
 
   // Community Hub
   communityExperiences: CommunityExperience[];
-  addCommunityExperience: (exp: Omit<CommunityExperience, 'id' | 'likes' | 'comments' | 'createdAt'>) => void;
+  addCommunityExperience: (exp: Omit<CommunityExperience, 'id' | 'likes' | 'likedBy' | 'comments' | 'createdAt'>) => void;
   deleteCommunityExperience: (id: string) => void;
-  likeCommunityExperience: (id: string) => void;
+  likeCommunityExperience: (id: string, userId: string) => void;
   addExperienceComment: (expId: string, comment: Omit<CommunityComment, 'id' | 'createdAt'>) => void;
+  deleteExperienceComment: (expId: string, commentId: string) => void;
 
   communityQuestions: CommunityQuestion[];
-  addCommunityQuestion: (q: Omit<CommunityQuestion, 'id' | 'answers' | 'likes' | 'createdAt'>) => void;
+  addCommunityQuestion: (q: Omit<CommunityQuestion, 'id' | 'answers' | 'likes' | 'likedBy' | 'createdAt'>) => void;
   deleteCommunityQuestion: (id: string) => void;
-  likeCommunityQuestion: (id: string) => void;
-  addCommunityAnswer: (questionId: string, answer: Omit<CommunityAnswer, 'id' | 'upvotes' | 'createdAt'>) => void;
-  upvoteCommunityAnswer: (questionId: string, answerId: string) => void;
+  likeCommunityQuestion: (id: string, userId: string) => void;
+  addCommunityAnswer: (questionId: string, answer: Omit<CommunityAnswer, 'id' | 'upvotes' | 'upvotedBy' | 'createdAt'>) => void;
+  upvoteCommunityAnswer: (questionId: string, answerId: string, userId: string) => void;
   markBestAnswer: (questionId: string, answerId: string) => void;
 
   communityVlogs: CommunityVlog[];
-  addCommunityVlog: (vlog: Omit<CommunityVlog, 'id' | 'likes' | 'comments' | 'createdAt'>) => void;
+  addCommunityVlog: (vlog: Omit<CommunityVlog, 'id' | 'likes' | 'likedBy' | 'comments' | 'createdAt'>) => void;
   deleteCommunityVlog: (id: string) => void;
-  likeCommunityVlog: (id: string) => void;
+  likeCommunityVlog: (id: string, userId: string) => void;
   addVlogComment: (vlogId: string, comment: Omit<CommunityComment, 'id' | 'createdAt'>) => void;
+  deleteVlogComment: (vlogId: string, commentId: string) => void;
 
   companyEligibilities: CompanyEligibility[];
   addCompanyEligibility: (e: Omit<CompanyEligibility, 'id' | 'createdAt'>) => void;
@@ -703,38 +709,58 @@ export const useStore = create<AppState>()(
       // Community Hub
       communityExperiences: [],
       addCommunityExperience: (exp) => set((state) => ({
-        communityExperiences: [{ ...exp, id: Date.now().toString(), likes: 0, comments: [], createdAt: new Date().toISOString() }, ...state.communityExperiences]
+        communityExperiences: [{ ...exp, id: Date.now().toString(), likes: 0, likedBy: [], comments: [], createdAt: new Date().toISOString() }, ...state.communityExperiences]
       })),
       deleteCommunityExperience: (id) => set((state) => ({
         communityExperiences: state.communityExperiences.filter(e => e.id !== id)
       })),
-      likeCommunityExperience: (id) => set((state) => ({
-        communityExperiences: state.communityExperiences.map(e => e.id === id ? { ...e, likes: e.likes + 1 } : e)
+      likeCommunityExperience: (id, userId) => set((state) => ({
+        communityExperiences: state.communityExperiences.map(e => {
+          if (e.id !== id) return e;
+          const likedBy = e.likedBy || [];
+          if (likedBy.includes(userId)) return e;
+          return { ...e, likes: e.likes + 1, likedBy: [...likedBy, userId] };
+        })
       })),
       addExperienceComment: (expId, comment) => set((state) => ({
         communityExperiences: state.communityExperiences.map(e => e.id === expId ? {
           ...e, comments: [...(e.comments || []), { ...comment, id: Date.now().toString(), createdAt: new Date().toISOString() }]
         } : e)
       })),
+      deleteExperienceComment: (expId, commentId) => set((state) => ({
+        communityExperiences: state.communityExperiences.map(e => e.id === expId ? {
+          ...e, comments: (e.comments || []).filter(c => c.id !== commentId)
+        } : e)
+      })),
 
       communityQuestions: [],
       addCommunityQuestion: (q) => set((state) => ({
-        communityQuestions: [{ ...q, id: Date.now().toString(), answers: [], likes: 0, createdAt: new Date().toISOString() }, ...state.communityQuestions]
+        communityQuestions: [{ ...q, id: Date.now().toString(), answers: [], likes: 0, likedBy: [], createdAt: new Date().toISOString() }, ...state.communityQuestions]
       })),
       deleteCommunityQuestion: (id) => set((state) => ({
         communityQuestions: state.communityQuestions.filter(q => q.id !== id)
       })),
-      likeCommunityQuestion: (id) => set((state) => ({
-        communityQuestions: state.communityQuestions.map(q => q.id === id ? { ...q, likes: q.likes + 1 } : q)
+      likeCommunityQuestion: (id, userId) => set((state) => ({
+        communityQuestions: state.communityQuestions.map(q => {
+          if (q.id !== id) return q;
+          const likedBy = q.likedBy || [];
+          if (likedBy.includes(userId)) return q;
+          return { ...q, likes: q.likes + 1, likedBy: [...likedBy, userId] };
+        })
       })),
       addCommunityAnswer: (questionId, answer) => set((state) => ({
         communityQuestions: state.communityQuestions.map(q => q.id === questionId ? {
-          ...q, answers: [...q.answers, { ...answer, id: Date.now().toString(), upvotes: 0, createdAt: new Date().toISOString() }]
+          ...q, answers: [...q.answers, { ...answer, id: Date.now().toString(), upvotes: 0, upvotedBy: [], createdAt: new Date().toISOString() }]
         } : q)
       })),
-      upvoteCommunityAnswer: (questionId, answerId) => set((state) => ({
+      upvoteCommunityAnswer: (questionId, answerId, userId) => set((state) => ({
         communityQuestions: state.communityQuestions.map(q => q.id === questionId ? {
-          ...q, answers: q.answers.map(a => a.id === answerId ? { ...a, upvotes: a.upvotes + 1 } : a)
+          ...q, answers: q.answers.map(a => {
+            if (a.id !== answerId) return a;
+            const upvotedBy = a.upvotedBy || [];
+            if (upvotedBy.includes(userId)) return a;
+            return { ...a, upvotes: a.upvotes + 1, upvotedBy: [...upvotedBy, userId] };
+          })
         } : q)
       })),
       markBestAnswer: (questionId, answerId) => set((state) => ({
@@ -743,17 +769,27 @@ export const useStore = create<AppState>()(
 
       communityVlogs: [],
       addCommunityVlog: (vlog) => set((state) => ({
-        communityVlogs: [{ ...vlog, id: Date.now().toString(), likes: 0, comments: [], createdAt: new Date().toISOString() }, ...state.communityVlogs]
+        communityVlogs: [{ ...vlog, id: Date.now().toString(), likes: 0, likedBy: [], comments: [], createdAt: new Date().toISOString() }, ...state.communityVlogs]
       })),
       deleteCommunityVlog: (id) => set((state) => ({
         communityVlogs: state.communityVlogs.filter(v => v.id !== id)
       })),
-      likeCommunityVlog: (id) => set((state) => ({
-        communityVlogs: state.communityVlogs.map(v => v.id === id ? { ...v, likes: v.likes + 1 } : v)
+      likeCommunityVlog: (id, userId) => set((state) => ({
+        communityVlogs: state.communityVlogs.map(v => {
+          if (v.id !== id) return v;
+          const likedBy = v.likedBy || [];
+          if (likedBy.includes(userId)) return v;
+          return { ...v, likes: v.likes + 1, likedBy: [...likedBy, userId] };
+        })
       })),
       addVlogComment: (vlogId, comment) => set((state) => ({
         communityVlogs: state.communityVlogs.map(v => v.id === vlogId ? {
           ...v, comments: [...(v.comments || []), { ...comment, id: Date.now().toString(), createdAt: new Date().toISOString() }]
+        } : v)
+      })),
+      deleteVlogComment: (vlogId, commentId) => set((state) => ({
+        communityVlogs: state.communityVlogs.map(v => v.id === vlogId ? {
+          ...v, comments: (v.comments || []).filter(c => c.id !== commentId)
         } : v)
       })),
 
