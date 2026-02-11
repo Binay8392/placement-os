@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, Circle, MessageSquare, Users, BookOpen, Video, Link2, ChevronRight, Plus, Trash2, Save } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Circle, MessageSquare, Users, BookOpen, Video, Link2, ChevronRight, Plus, Trash2, Save, Play, ExternalLink, RefreshCw } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useStore, type TaskCategory } from '@/lib/store';
 import { companyDataMap } from '@/data/companyData';
+import { fetchInterviewExperiences, fetchHRQuestions, fetchMentorVideos, clearCompanyCache } from '@/lib/companyServices';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -78,8 +79,6 @@ function OverviewTab({ companyName }: { companyName: string }) {
   const company = companyDataMap[companyName];
   const { trackedTasks, hrAnswers } = useStore();
 
-  const companyTasks = trackedTasks.filter(t => t.name.toLowerCase().includes(companyName.toLowerCase()) || true);
-  // For a real filter, we'd tag tasks with company. For now, show general stats
   const completedTasks = trackedTasks.filter(t => t.status === 'Completed').length;
   const totalTasks = trackedTasks.length;
   const hrPracticed = hrAnswers.filter(a => a.company === companyName && a.practiced).length;
@@ -108,7 +107,7 @@ function OverviewTab({ companyName }: { companyName: string }) {
           { label: 'Tasks Done', value: completedTasks, total: totalTasks },
           { label: 'HR Practiced', value: hrPracticed, total: totalHR },
           { label: 'Roadmap Phases', value: company.roadmap.length, total: company.roadmap.length },
-          { label: 'Resources', value: company.resources.length, total: company.resources.length },
+          { label: 'Experiences', value: company.interviewExperiences.length, total: company.interviewExperiences.length },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="bg-card border border-border rounded-xl p-4 text-center">
@@ -183,8 +182,6 @@ function TasksTab({ companyName }: { companyName: string }) {
   const { trackedTasks, toggleTaskStatus } = useStore();
   const [filter, setFilter] = useState<string>('All');
 
-  // Show tasks that were potentially generated for this company
-  // Simple heuristic: all tasks (since tasks aren't tagged with company yet)
   const filtered = trackedTasks.filter(t => filter === 'All' || t.category === filter);
 
   return (
@@ -219,24 +216,23 @@ function TasksTab({ companyName }: { companyName: string }) {
 
 // ── HR Questions Tab ──
 function HRTab({ companyName }: { companyName: string }) {
-  const company = companyDataMap[companyName];
+  const hrQuestions = useMemo(() => fetchHRQuestions(companyName), [companyName]);
   const { hrAnswers, setHRAnswer, toggleHRPracticed } = useStore();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftAnswer, setDraftAnswer] = useState('');
 
   const getAnswer = (qId: string) => hrAnswers.find(a => a.questionId === qId && a.company === companyName);
-
-  const practicedCount = company.hrQuestions.filter(q => getAnswer(q.id)?.practiced).length;
+  const practicedCount = hrQuestions.filter(q => getAnswer(q.id)?.practiced).length;
 
   return (
     <div className="space-y-4 mt-4">
       <div className="bg-card border border-border rounded-2xl p-4 flex justify-between items-center">
         <span className="text-sm">Practiced</span>
-        <span className="font-bold text-primary">{practicedCount}/{company.hrQuestions.length}</span>
+        <span className="font-bold text-primary">{practicedCount}/{hrQuestions.length}</span>
       </div>
 
       <div className="space-y-3">
-        {company.hrQuestions.map((q, i) => {
+        {hrQuestions.map((q, i) => {
           const ans = getAnswer(q.id);
           const isEditing = editingId === q.id;
           return (
@@ -276,9 +272,10 @@ function HRTab({ companyName }: { companyName: string }) {
 
 // ── Interview Experiences Tab ──
 function ExperiencesTab({ companyName }: { companyName: string }) {
-  const company = companyDataMap[companyName];
+  const experiences = useMemo(() => fetchInterviewExperiences(companyName), [companyName]);
   const { userInterviewExperiences, addInterviewExperience, deleteInterviewExperience } = useStore();
   const [showForm, setShowForm] = useState(false);
+  const [expandedRound, setExpandedRound] = useState<string | null>(null);
   const [form, setForm] = useState({ role: '', rounds: '', questions: '', tips: '', difficulty: 'Medium' as const });
 
   const userExps = userInterviewExperiences.filter(e => e.company === companyName);
@@ -293,49 +290,105 @@ function ExperiencesTab({ companyName }: { companyName: string }) {
 
   return (
     <div className="space-y-4 mt-4">
-      {/* Built-in experiences */}
-      {company.interviewExperiences.map((exp, i) => (
+      <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium">{experiences.length} Interview Experience{experiences.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-muted-foreground">Curated from GeeksforGeeks, Glassdoor & LeetCode</p>
+        </div>
+        <Badge variant="secondary" className="text-xs">{companyName}</Badge>
+      </div>
+
+      {/* Curated experiences with round-wise details */}
+      {experiences.map((exp, i) => (
         <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-          className="bg-card border border-border rounded-2xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm">{companyName} — {exp.role}</h3>
-            <Badge variant="outline">{exp.difficulty}</Badge>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Rounds:</p>
+          className="bg-card border border-border rounded-2xl overflow-hidden">
+          {/* Header */}
+          <div className="p-4 border-b border-border">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold">{companyName} — {exp.role}</h3>
+              <div className="flex gap-2">
+                <Badge variant="outline">{exp.difficulty}</Badge>
+                {exp.source && <Badge variant="secondary" className="text-[10px]">{exp.source}</Badge>}
+              </div>
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {exp.rounds.map((r, ri) => (
                 <Badge key={ri} variant="secondary" className="text-[10px]">{r}</Badge>
               ))}
             </div>
           </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Questions Asked:</p>
-            <ul className="text-xs space-y-1">
-              {exp.questions.map((q, qi) => <li key={qi} className="flex items-center gap-1.5"><ChevronRight className="w-3 h-3 text-primary" />{q}</li>)}
-            </ul>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground mb-1">Tips:</p>
-            <ul className="text-xs space-y-1">
-              {exp.tips.map((t, ti) => <li key={ti} className="flex items-start gap-1.5"><CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />{t}</li>)}
+
+          {/* Round-wise details */}
+          {exp.roundDetails && exp.roundDetails.length > 0 && (
+            <div className="divide-y divide-border">
+              {exp.roundDetails.map((round, ri) => {
+                const roundKey = `${i}-${ri}`;
+                const isExpanded = expandedRound === roundKey;
+                return (
+                  <div key={ri}>
+                    <button
+                      onClick={() => setExpandedRound(isExpanded ? null : roundKey)}
+                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{ri + 1}</div>
+                        <span className="text-sm font-medium">{round.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-muted-foreground">{round.questions.length} questions</span>
+                        <ChevronRight className={cn("w-4 h-4 text-muted-foreground transition-transform", isExpanded && "rotate-90")} />
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="px-4 pb-3">
+                        <ul className="space-y-1.5 ml-8">
+                          {round.questions.map((q, qi) => (
+                            <li key={qi} className="flex items-start gap-2 text-xs text-muted-foreground">
+                              <ChevronRight className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                              <span>{q}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </motion.div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Tips */}
+          <div className="p-4 bg-muted/30">
+            <p className="text-xs font-medium text-muted-foreground mb-2">💡 Tips</p>
+            <ul className="space-y-1">
+              {exp.tips.map((t, ti) => (
+                <li key={ti} className="flex items-start gap-1.5 text-xs">
+                  <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
+                  <span>{t}</span>
+                </li>
+              ))}
             </ul>
           </div>
         </motion.div>
       ))}
 
       {/* User-added experiences */}
-      {userExps.map(exp => (
-        <div key={exp.id} className="bg-card border border-border rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm">{exp.role} <Badge className="ml-2 text-[10px]">Your Experience</Badge></h3>
-            <Button size="icon" variant="ghost" onClick={() => deleteInterviewExperience(exp.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-          </div>
-          {exp.rounds && <p className="text-xs text-muted-foreground"><strong>Rounds:</strong> {exp.rounds}</p>}
-          {exp.questions && <p className="text-xs text-muted-foreground"><strong>Questions:</strong> {exp.questions}</p>}
-          {exp.tips && <p className="text-xs text-muted-foreground"><strong>Tips:</strong> {exp.tips}</p>}
+      {userExps.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-xs font-medium text-muted-foreground">Your Experiences</p>
+          {userExps.map(exp => (
+            <div key={exp.id} className="bg-card border border-border rounded-2xl p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm">{exp.role} <Badge className="ml-2 text-[10px]">Your Experience</Badge></h3>
+                <Button size="icon" variant="ghost" onClick={() => deleteInterviewExperience(exp.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+              </div>
+              {exp.rounds && <p className="text-xs text-muted-foreground"><strong>Rounds:</strong> {exp.rounds}</p>}
+              {exp.questions && <p className="text-xs text-muted-foreground"><strong>Questions:</strong> {exp.questions}</p>}
+              {exp.tips && <p className="text-xs text-muted-foreground"><strong>Tips:</strong> {exp.tips}</p>}
+            </div>
+          ))}
         </div>
-      ))}
+      )}
 
       {showForm ? (
         <Card>
@@ -370,22 +423,52 @@ function ExperiencesTab({ companyName }: { companyName: string }) {
 
 // ── Mentor Talks Tab ──
 function MentorTab({ companyName }: { companyName: string }) {
-  const company = companyDataMap[companyName];
+  const mentorTalks = useMemo(() => fetchMentorVideos(companyName), [companyName]);
+
   return (
     <div className="space-y-4 mt-4">
-      {company.mentorTalks.map((talk, i) => (
+      <div className="bg-card border border-border rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium">Mentor Talks & Videos</p>
+          <p className="text-xs text-muted-foreground">Curated preparation tips and YouTube content</p>
+        </div>
+        <Video className="w-5 h-5 text-primary" />
+      </div>
+
+      {mentorTalks.map((talk, i) => (
         <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}
-          className="bg-card border border-border rounded-2xl p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-sm">{talk.title}</h3>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">{talk.advice}</p>
+          className="bg-card border border-border rounded-2xl overflow-hidden">
+          {/* Embedded YouTube Video */}
           {talk.videoUrl && (
-            <a href={talk.videoUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline">
-              <Video className="w-3.5 h-3.5" /> Watch Video
-            </a>
+            <div className="aspect-video w-full bg-black">
+              <iframe
+                src={talk.videoUrl}
+                title={talk.videoTitle || talk.title}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
           )}
+
+          <div className="p-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-primary shrink-0" />
+              <h3 className="font-semibold text-sm">{talk.title}</h3>
+            </div>
+            {talk.videoTitle && (
+              <p className="text-xs text-primary/80 flex items-center gap-1">
+                <Play className="w-3 h-3" /> {talk.videoTitle}
+              </p>
+            )}
+            <p className="text-sm text-muted-foreground leading-relaxed">{talk.advice}</p>
+            {talk.videoUrl && (
+              <a href={talk.videoUrl.replace('/embed/', '/watch?v=')} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline mt-1">
+                <ExternalLink className="w-3 h-3" /> Watch on YouTube
+              </a>
+            )}
+          </div>
         </motion.div>
       ))}
     </div>
