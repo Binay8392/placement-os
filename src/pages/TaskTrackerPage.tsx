@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import BulkImportModal from '@/components/BulkImportModal';
 
 const categories: TaskCategory[] = ['Coding', 'Aptitude', 'CS Fundamentals', 'Interview', 'Project', 'Other'];
 const difficulties: TaskDifficulty[] = ['Easy', 'Medium', 'Hard'];
@@ -109,7 +110,9 @@ export default function TaskTrackerPage() {
             </h1>
             <p className="text-muted-foreground text-sm">Track your placement preparation tasks</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+          <div className="flex gap-2">
+            <BulkImportModal />
+            <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1">
                 <Plus className="w-4 h-4" /> Add Task
@@ -159,6 +162,7 @@ export default function TaskTrackerPage() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </header>
 
