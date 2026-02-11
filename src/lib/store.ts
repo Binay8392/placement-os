@@ -164,6 +164,14 @@ export interface DailyActivity {
 }
 
 // Community Hub types
+export interface CommunityComment {
+  id: string;
+  userId: string;
+  username: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface CommunityExperience {
   id: string;
   userId: string;
@@ -176,6 +184,7 @@ export interface CommunityExperience {
   questions: string;
   tips: string;
   likes: number;
+  comments: CommunityComment[];
   createdAt: string;
 }
 
@@ -212,6 +221,7 @@ export interface CommunityVlog {
   type: 'youtube' | 'text';
   textContent?: string;
   likes: number;
+  comments: CommunityComment[];
   createdAt: string;
 }
 
@@ -358,9 +368,10 @@ interface AppState {
 
   // Community Hub
   communityExperiences: CommunityExperience[];
-  addCommunityExperience: (exp: Omit<CommunityExperience, 'id' | 'likes' | 'createdAt'>) => void;
+  addCommunityExperience: (exp: Omit<CommunityExperience, 'id' | 'likes' | 'comments' | 'createdAt'>) => void;
   deleteCommunityExperience: (id: string) => void;
   likeCommunityExperience: (id: string) => void;
+  addExperienceComment: (expId: string, comment: Omit<CommunityComment, 'id' | 'createdAt'>) => void;
 
   communityQuestions: CommunityQuestion[];
   addCommunityQuestion: (q: Omit<CommunityQuestion, 'id' | 'answers' | 'likes' | 'createdAt'>) => void;
@@ -371,9 +382,10 @@ interface AppState {
   markBestAnswer: (questionId: string, answerId: string) => void;
 
   communityVlogs: CommunityVlog[];
-  addCommunityVlog: (vlog: Omit<CommunityVlog, 'id' | 'likes' | 'createdAt'>) => void;
+  addCommunityVlog: (vlog: Omit<CommunityVlog, 'id' | 'likes' | 'comments' | 'createdAt'>) => void;
   deleteCommunityVlog: (id: string) => void;
   likeCommunityVlog: (id: string) => void;
+  addVlogComment: (vlogId: string, comment: Omit<CommunityComment, 'id' | 'createdAt'>) => void;
 
   companyEligibilities: CompanyEligibility[];
   addCompanyEligibility: (e: Omit<CompanyEligibility, 'id' | 'createdAt'>) => void;
@@ -691,13 +703,18 @@ export const useStore = create<AppState>()(
       // Community Hub
       communityExperiences: [],
       addCommunityExperience: (exp) => set((state) => ({
-        communityExperiences: [{ ...exp, id: Date.now().toString(), likes: 0, createdAt: new Date().toISOString() }, ...state.communityExperiences]
+        communityExperiences: [{ ...exp, id: Date.now().toString(), likes: 0, comments: [], createdAt: new Date().toISOString() }, ...state.communityExperiences]
       })),
       deleteCommunityExperience: (id) => set((state) => ({
         communityExperiences: state.communityExperiences.filter(e => e.id !== id)
       })),
       likeCommunityExperience: (id) => set((state) => ({
         communityExperiences: state.communityExperiences.map(e => e.id === id ? { ...e, likes: e.likes + 1 } : e)
+      })),
+      addExperienceComment: (expId, comment) => set((state) => ({
+        communityExperiences: state.communityExperiences.map(e => e.id === expId ? {
+          ...e, comments: [...(e.comments || []), { ...comment, id: Date.now().toString(), createdAt: new Date().toISOString() }]
+        } : e)
       })),
 
       communityQuestions: [],
@@ -726,13 +743,18 @@ export const useStore = create<AppState>()(
 
       communityVlogs: [],
       addCommunityVlog: (vlog) => set((state) => ({
-        communityVlogs: [{ ...vlog, id: Date.now().toString(), likes: 0, createdAt: new Date().toISOString() }, ...state.communityVlogs]
+        communityVlogs: [{ ...vlog, id: Date.now().toString(), likes: 0, comments: [], createdAt: new Date().toISOString() }, ...state.communityVlogs]
       })),
       deleteCommunityVlog: (id) => set((state) => ({
         communityVlogs: state.communityVlogs.filter(v => v.id !== id)
       })),
       likeCommunityVlog: (id) => set((state) => ({
         communityVlogs: state.communityVlogs.map(v => v.id === id ? { ...v, likes: v.likes + 1 } : v)
+      })),
+      addVlogComment: (vlogId, comment) => set((state) => ({
+        communityVlogs: state.communityVlogs.map(v => v.id === vlogId ? {
+          ...v, comments: [...(v.comments || []), { ...comment, id: Date.now().toString(), createdAt: new Date().toISOString() }]
+        } : v)
       })),
 
       companyEligibilities: [],

@@ -86,9 +86,11 @@ export default function CommunityPage() {
 
 // ── Experiences Tab ──
 function ExperiencesTab({ search, companyFilter }: { search: string; companyFilter: string }) {
-  const { communityExperiences, addCommunityExperience, deleteCommunityExperience, likeCommunityExperience } = useStore();
+  const { communityExperiences, addCommunityExperience, deleteCommunityExperience, likeCommunityExperience, addExperienceComment } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ company: 'TCS', role: '', interviewDate: '', difficulty: 'Medium' as const, rounds: '', questions: '', tips: '' });
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [expandedComments, setExpandedComments] = useState<string | null>(null);
 
   const filtered = useMemo(() => communityExperiences.filter(e => {
     if (companyFilter !== 'All' && e.company !== companyFilter) return false;
@@ -102,6 +104,14 @@ function ExperiencesTab({ search, companyFilter }: { search: string; companyFilt
     setForm({ company: 'TCS', role: '', interviewDate: '', difficulty: 'Medium', rounds: '', questions: '', tips: '' });
     setShowForm(false);
     toast.success('Experience shared!');
+  };
+
+  const handleComment = (expId: string) => {
+    const text = commentDrafts[expId]?.trim();
+    if (!text) return;
+    addExperienceComment(expId, { userId: getUserId(), username: getUsername(), text });
+    setCommentDrafts(d => ({ ...d, [expId]: '' }));
+    toast.success('Comment posted!');
   };
 
   return (
@@ -137,40 +147,70 @@ function ExperiencesTab({ search, companyFilter }: { search: string; companyFilt
 
       {filtered.length === 0 && <p className="text-center text-muted-foreground text-sm py-8">No experiences yet. Be the first to share!</p>}
 
-      {filtered.map((exp, i) => (
-        <motion.div key={exp.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-          className="bg-card border border-border rounded-2xl p-4 space-y-3">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{exp.username.charAt(0).toUpperCase()}</div>
+      {filtered.map((exp, i) => {
+        const comments = exp.comments || [];
+        return (
+          <motion.div key={exp.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+            className="bg-card border border-border rounded-2xl overflow-hidden">
+            <div className="p-4 space-y-3">
+              <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium">{exp.username}</p>
-                  <p className="text-[10px] text-muted-foreground">{timeAgo(exp.createdAt)}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">{exp.username.charAt(0).toUpperCase()}</div>
+                    <div>
+                      <p className="text-sm font-medium">{exp.username}</p>
+                      <p className="text-[10px] text-muted-foreground">{timeAgo(exp.createdAt)}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  <Badge variant="outline">{exp.company}</Badge>
+                  <Badge variant="secondary">{exp.difficulty}</Badge>
                 </div>
               </div>
+              <h3 className="font-semibold text-sm">{exp.company} — {exp.role}</h3>
+              {exp.rounds && <div className="flex flex-wrap gap-1">{exp.rounds.split(',').map((r, ri) => <Badge key={ri} variant="secondary" className="text-[10px]">{r.trim()}</Badge>)}</div>}
+              {exp.questions && <div><p className="text-xs font-medium text-muted-foreground mb-1">Questions:</p><p className="text-xs text-foreground whitespace-pre-line">{exp.questions}</p></div>}
+              {exp.tips && <div className="bg-muted/40 rounded-lg p-2"><p className="text-xs font-medium text-muted-foreground mb-1">💡 Tips:</p><p className="text-xs">{exp.tips}</p></div>}
+              <div className="flex items-center gap-3 pt-1">
+                <button onClick={() => likeCommunityExperience(exp.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
+                  <Heart className="w-3.5 h-3.5" /> {exp.likes}
+                </button>
+                <button onClick={() => setExpandedComments(expandedComments === exp.id ? null : exp.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  <MessageSquare className="w-3.5 h-3.5" /> {comments.length} comment{comments.length !== 1 ? 's' : ''}
+                </button>
+                {exp.userId === getUserId() && (
+                  <button onClick={() => { deleteCommunityExperience(exp.id); toast.success('Deleted'); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex gap-1.5">
-              <Badge variant="outline">{exp.company}</Badge>
-              <Badge variant="secondary">{exp.difficulty}</Badge>
-            </div>
-          </div>
-          <h3 className="font-semibold text-sm">{exp.company} — {exp.role}</h3>
-          {exp.rounds && <div className="flex flex-wrap gap-1">{exp.rounds.split(',').map((r, ri) => <Badge key={ri} variant="secondary" className="text-[10px]">{r.trim()}</Badge>)}</div>}
-          {exp.questions && <div><p className="text-xs font-medium text-muted-foreground mb-1">Questions:</p><p className="text-xs text-foreground whitespace-pre-line">{exp.questions}</p></div>}
-          {exp.tips && <div className="bg-muted/40 rounded-lg p-2"><p className="text-xs font-medium text-muted-foreground mb-1">💡 Tips:</p><p className="text-xs">{exp.tips}</p></div>}
-          <div className="flex items-center gap-3 pt-1">
-            <button onClick={() => likeCommunityExperience(exp.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
-              <Heart className="w-3.5 h-3.5" /> {exp.likes}
-            </button>
-            {exp.userId === getUserId() && (
-              <button onClick={() => { deleteCommunityExperience(exp.id); toast.success('Deleted'); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto">
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+
+            {expandedComments === exp.id && (
+              <div className="border-t border-border">
+                {comments.map(c => (
+                  <div key={c.id} className="px-4 py-2 border-b border-border last:border-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{c.username.charAt(0).toUpperCase()}</div>
+                      <span className="text-xs font-medium">{c.username}</span>
+                      <span className="text-[10px] text-muted-foreground">{timeAgo(c.createdAt)}</span>
+                    </div>
+                    <p className="text-xs ml-7">{c.text}</p>
+                  </div>
+                ))}
+                <div className="p-3 flex gap-2">
+                  <Input placeholder="Write a comment..." value={commentDrafts[exp.id] || ''} onChange={e => setCommentDrafts(d => ({ ...d, [exp.id]: e.target.value }))}
+                    className="text-xs" onKeyDown={e => e.key === 'Enter' && handleComment(exp.id)} />
+                  <Button size="sm" onClick={() => handleComment(exp.id)} disabled={!commentDrafts[exp.id]?.trim()}>
+                    <Send className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
             )}
-          </div>
-        </motion.div>
-      ))}
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
@@ -304,9 +344,11 @@ function QuestionsTab({ search, companyFilter }: { search: string; companyFilter
 
 // ── Vlogs Tab ──
 function VlogsTab({ search, companyFilter }: { search: string; companyFilter: string }) {
-  const { communityVlogs, addCommunityVlog, deleteCommunityVlog, likeCommunityVlog } = useStore();
+  const { communityVlogs, addCommunityVlog, deleteCommunityVlog, likeCommunityVlog, addVlogComment } = useStore();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', company: 'TCS', videoUrl: '', type: 'youtube' as const, textContent: '' });
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [expandedComments, setExpandedComments] = useState<string | null>(null);
 
   const filtered = useMemo(() => communityVlogs.filter(v => {
     if (companyFilter !== 'All' && v.company !== companyFilter) return false;
@@ -328,6 +370,14 @@ function VlogsTab({ search, companyFilter }: { search: string; companyFilter: st
     setForm({ title: '', description: '', company: 'TCS', videoUrl: '', type: 'youtube', textContent: '' });
     setShowForm(false);
     toast.success('Vlog shared!');
+  };
+
+  const handleComment = (vlogId: string) => {
+    const text = commentDrafts[vlogId]?.trim();
+    if (!text) return;
+    addVlogComment(vlogId, { userId: getUserId(), username: getUsername(), text });
+    setCommentDrafts(d => ({ ...d, [vlogId]: '' }));
+    toast.success('Comment posted!');
   };
 
   return (
@@ -366,6 +416,7 @@ function VlogsTab({ search, companyFilter }: { search: string; companyFilter: st
 
       {filtered.map((vlog, i) => {
         const embedUrl = vlog.type === 'youtube' ? getEmbedUrl(vlog.videoUrl) : null;
+        const comments = vlog.comments || [];
         return (
           <motion.div key={vlog.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
             className="bg-card border border-border rounded-2xl overflow-hidden">
@@ -399,6 +450,9 @@ function VlogsTab({ search, companyFilter }: { search: string; companyFilter: st
                 <button onClick={() => likeCommunityVlog(vlog.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors">
                   <Heart className="w-3.5 h-3.5" /> {vlog.likes}
                 </button>
+                <button onClick={() => setExpandedComments(expandedComments === vlog.id ? null : vlog.id)} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  <MessageSquare className="w-3.5 h-3.5" /> {comments.length} comment{comments.length !== 1 ? 's' : ''}
+                </button>
                 {vlog.userId === getUserId() && (
                   <button onClick={() => { deleteCommunityVlog(vlog.id); toast.success('Deleted'); }} className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors ml-auto">
                     <Trash2 className="w-3.5 h-3.5" />
@@ -406,6 +460,28 @@ function VlogsTab({ search, companyFilter }: { search: string; companyFilter: st
                 )}
               </div>
             </div>
+
+            {expandedComments === vlog.id && (
+              <div className="border-t border-border">
+                {comments.map(c => (
+                  <div key={c.id} className="px-4 py-2 border-b border-border last:border-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px] font-bold">{c.username.charAt(0).toUpperCase()}</div>
+                      <span className="text-xs font-medium">{c.username}</span>
+                      <span className="text-[10px] text-muted-foreground">{timeAgo(c.createdAt)}</span>
+                    </div>
+                    <p className="text-xs ml-7">{c.text}</p>
+                  </div>
+                ))}
+                <div className="p-3 flex gap-2">
+                  <Input placeholder="Write a comment..." value={commentDrafts[vlog.id] || ''} onChange={e => setCommentDrafts(d => ({ ...d, [vlog.id]: e.target.value }))}
+                    className="text-xs" onKeyDown={e => e.key === 'Enter' && handleComment(vlog.id)} />
+                  <Button size="sm" onClick={() => handleComment(vlog.id)} disabled={!commentDrafts[vlog.id]?.trim()}>
+                    <Send className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </motion.div>
         );
       })}
