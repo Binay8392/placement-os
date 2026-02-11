@@ -5,7 +5,7 @@ import { persist } from 'zustand/middleware';
 export interface StudySession {
   id: string;
   category: 'dsa' | 'aptitude' | 'core-cs' | 'development';
-  duration: number; // in seconds
+  duration: number;
   date: string;
   notes?: string;
 }
@@ -113,19 +113,47 @@ export interface UserProfile {
   avatarUrl?: string;
 }
 
+// NEW: Task Tracker types
+export type TaskCategory = 'Coding' | 'Aptitude' | 'CS Fundamentals' | 'Interview' | 'Project' | 'Other';
+export type TaskDifficulty = 'Easy' | 'Medium' | 'Hard';
+export type TaskSource = 'LeetCode' | 'HackerRank' | 'PrepInsta' | 'Custom';
+export type TaskStatus = 'Pending' | 'Completed';
+
+export interface TrackedTask {
+  id: string;
+  name: string;
+  category: TaskCategory;
+  difficulty: TaskDifficulty;
+  source: TaskSource;
+  dateAdded: string;
+  completionDate?: string;
+  status: TaskStatus;
+}
+
+// NEW: LeetCode Progress
+export interface LeetCodeProgress {
+  easySolved: number;
+  mediumSolved: number;
+  hardSolved: number;
+  target: number;
+}
+
+// NEW: Daily streak tracking
+export interface DailyActivity {
+  date: string;
+  tasksCompleted: number;
+}
+
 // Initial DSA topics
 const initialDSATopics: DSATopic[] = [
-  // Foundations
   { id: 'tc', name: 'Time & Space Complexity', category: 'foundations', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'recursion', name: 'Recursion', category: 'foundations', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
-  // Core
   { id: 'arrays', name: 'Arrays', category: 'core', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'strings', name: 'Strings', category: 'core', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'searching', name: 'Searching & Sorting', category: 'core', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'linkedlist', name: 'Linked Lists', category: 'core', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'stackqueue', name: 'Stack & Queue', category: 'core', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'hashing', name: 'Hashing', category: 'core', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
-  // Advanced
   { id: 'trees', name: 'Trees', category: 'advanced', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'heaps', name: 'Heaps', category: 'advanced', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
   { id: 'graphs', name: 'Graphs', category: 'advanced', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
@@ -134,9 +162,7 @@ const initialDSATopics: DSATopic[] = [
   { id: 'backtracking', name: 'Backtracking', category: 'advanced', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
 ];
 
-// Initial Aptitude topics
 const initialAptitudeTopics: AptitudeTopic[] = [
-  // Quantitative Aptitude
   { id: 'numbers', name: 'Number Systems', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'percentages', name: 'Percentages', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'profit-loss', name: 'Profit & Loss', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
@@ -149,8 +175,6 @@ const initialAptitudeTopics: AptitudeTopic[] = [
   { id: 'probability', name: 'Probability', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'permutation', name: 'Permutation & Combination', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'di', name: 'Data Interpretation', section: 'quantitative', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
-  
-  // Logical Reasoning
   { id: 'puzzles', name: 'Puzzles', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'seating', name: 'Seating Arrangement', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'syllogism', name: 'Syllogism', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
@@ -161,8 +185,6 @@ const initialAptitudeTopics: AptitudeTopic[] = [
   { id: 'series', name: 'Number & Letter Series', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'analogy', name: 'Analogy', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'input-output', name: 'Input-Output', section: 'logical', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
-  
-  // Verbal Ability
   { id: 'rc', name: 'Reading Comprehension', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'vocabulary', name: 'Vocabulary', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
   { id: 'grammar', name: 'Grammar', section: 'verbal', attempted: 0, correct: 0, lastPracticed: null, notes: '' },
@@ -174,19 +196,15 @@ const initialAptitudeTopics: AptitudeTopic[] = [
 ];
 
 interface AppState {
-  // Theme
   theme: 'dark' | 'light';
   toggleTheme: () => void;
   
-  // Profile
   profile: UserProfile;
   updateProfile: (profile: Partial<UserProfile>) => void;
   
-  // Study Sessions
   studySessions: StudySession[];
   addStudySession: (session: StudySession) => void;
   
-  // Active Timer
   activeTimer: {
     isRunning: boolean;
     category: StudySession['category'];
@@ -201,54 +219,60 @@ interface AppState {
   resetTimer: () => void;
   updateElapsed: (elapsed: number) => void;
   
-  // Habits
   habits: Habit[];
   addHabit: (habit: Omit<Habit, 'id' | 'streak' | 'completedDates' | 'createdAt'>) => void;
   toggleHabitCompletion: (habitId: string, date: string) => void;
   deleteHabit: (habitId: string) => void;
   
-  // DSA Topics
   dsaTopics: DSATopic[];
   updateDSATopic: (id: string, updates: Partial<DSATopic>) => void;
   
-  // Aptitude Topics
   aptitudeTopics: AptitudeTopic[];
   updateAptitudeTopic: (id: string, updates: Partial<AptitudeTopic>) => void;
   logAptitudePractice: (id: string, attempted: number, correct: number) => void;
   
-  // Reflections
   reflections: DailyReflection[];
   addReflection: (reflection: Omit<DailyReflection, 'id'>) => void;
   
-  // Placement Applications
   applications: PlacementApplication[];
   addApplication: (app: Omit<PlacementApplication, 'id'>) => void;
   updateApplication: (id: string, updates: Partial<PlacementApplication>) => void;
   deleteApplication: (id: string) => void;
   
-  // Govt/Banking Exams
   govtExams: GovtExam[];
   addGovtExam: (exam: Omit<GovtExam, 'id'>) => void;
   updateGovtExam: (id: string, updates: Partial<GovtExam>) => void;
   deleteGovtExam: (id: string) => void;
   
-  // Resources
   resources: Resource[];
   addResource: (resource: Omit<Resource, 'id' | 'createdAt'>) => void;
   updateResource: (id: string, updates: Partial<Resource>) => void;
   deleteResource: (id: string) => void;
+
+  // NEW: Task Tracker
+  trackedTasks: TrackedTask[];
+  addTrackedTask: (task: Omit<TrackedTask, 'id'>) => void;
+  updateTrackedTask: (id: string, updates: Partial<TrackedTask>) => void;
+  deleteTrackedTask: (id: string) => void;
+  toggleTaskStatus: (id: string) => void;
+
+  // NEW: LeetCode Progress
+  leetCodeProgress: LeetCodeProgress;
+  updateLeetCodeProgress: (updates: Partial<LeetCodeProgress>) => void;
+
+  // NEW: Daily Activity for streak
+  dailyActivities: DailyActivity[];
+  recordDailyActivity: (date: string) => void;
 }
 
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
-      // Theme
       theme: 'dark',
       toggleTheme: () => set((state) => ({ 
         theme: state.theme === 'dark' ? 'light' : 'dark' 
       })),
       
-      // Profile
       profile: {
         name: '',
         degree: '',
@@ -268,13 +292,11 @@ export const useStore = create<AppState>()(
         profile: { ...state.profile, ...updates }
       })),
       
-      // Study Sessions
       studySessions: [],
       addStudySession: (session) => set((state) => ({
         studySessions: [...state.studySessions, session]
       })),
       
-      // Active Timer
       activeTimer: {
         isRunning: false,
         category: 'dsa',
@@ -313,7 +335,7 @@ export const useStore = create<AppState>()(
       }),
       stopTimer: () => {
         const { activeTimer, addStudySession } = get();
-        if (activeTimer.elapsed > 10) { // Save if more than 10 seconds (for testing)
+        if (activeTimer.elapsed > 10) {
           addStudySession({
             id: Date.now().toString(),
             category: activeTimer.category,
@@ -344,7 +366,6 @@ export const useStore = create<AppState>()(
         }
       })),
       
-      // Habits
       habits: [
         { id: '1', name: 'Solve 3 DSA problems', type: 'good', streak: 0, completedDates: [], createdAt: new Date().toISOString() },
         { id: '2', name: 'Read tech articles', type: 'good', streak: 0, completedDates: [], createdAt: new Date().toISOString() },
@@ -368,7 +389,6 @@ export const useStore = create<AppState>()(
             ? h.completedDates.filter((d) => d !== date)
             : [...h.completedDates, date];
           
-          // Calculate streak
           let streak = 0;
           const today = new Date();
           for (let i = 0; i < 365; i++) {
@@ -389,7 +409,6 @@ export const useStore = create<AppState>()(
         habits: state.habits.filter((h) => h.id !== habitId)
       })),
       
-      // DSA Topics
       dsaTopics: initialDSATopics,
       updateDSATopic: (id, updates) => set((state) => ({
         dsaTopics: state.dsaTopics.map((t) =>
@@ -397,7 +416,6 @@ export const useStore = create<AppState>()(
         )
       })),
       
-      // Aptitude Topics
       aptitudeTopics: initialAptitudeTopics,
       updateAptitudeTopic: (id, updates) => set((state) => ({
         aptitudeTopics: state.aptitudeTopics.map((t) =>
@@ -417,13 +435,11 @@ export const useStore = create<AppState>()(
         )
       })),
       
-      // Reflections
       reflections: [],
       addReflection: (reflection) => set((state) => ({
         reflections: [...state.reflections, { ...reflection, id: Date.now().toString() }]
       })),
       
-      // Placement Applications
       applications: [],
       addApplication: (app) => set((state) => ({
         applications: [...state.applications, { ...app, id: Date.now().toString() }]
@@ -437,7 +453,6 @@ export const useStore = create<AppState>()(
         applications: state.applications.filter((a) => a.id !== id)
       })),
       
-      // Govt/Banking Exams
       govtExams: [],
       addGovtExam: (exam) => set((state) => ({
         govtExams: [...state.govtExams, { ...exam, id: Date.now().toString() }]
@@ -451,7 +466,6 @@ export const useStore = create<AppState>()(
         govtExams: state.govtExams.filter((e) => e.id !== id)
       })),
       
-      // Resources
       resources: [],
       addResource: (resource) => set((state) => ({
         resources: [...state.resources, { 
@@ -468,6 +482,71 @@ export const useStore = create<AppState>()(
       deleteResource: (id) => set((state) => ({
         resources: state.resources.filter((r) => r.id !== id)
       })),
+
+      // NEW: Task Tracker
+      trackedTasks: [],
+      addTrackedTask: (task) => set((state) => {
+        const newTask = { ...task, id: Date.now().toString() };
+        // Record daily activity
+        const today = getTodayString();
+        return { trackedTasks: [...state.trackedTasks, newTask] };
+      }),
+      updateTrackedTask: (id, updates) => set((state) => ({
+        trackedTasks: state.trackedTasks.map((t) =>
+          t.id === id ? { ...t, ...updates } : t
+        )
+      })),
+      deleteTrackedTask: (id) => set((state) => ({
+        trackedTasks: state.trackedTasks.filter((t) => t.id !== id)
+      })),
+      toggleTaskStatus: (id) => set((state) => {
+        const today = getTodayString();
+        const updated = state.trackedTasks.map((t) => {
+          if (t.id !== id) return t;
+          const newStatus: TaskStatus = t.status === 'Pending' ? 'Completed' : 'Pending';
+          return {
+            ...t,
+            status: newStatus,
+            completionDate: newStatus === 'Completed' ? today : undefined,
+          };
+        });
+        
+        // Auto-record daily activity
+        const completedToday = updated.filter(t => t.completionDate === today).length;
+        const existingActivity = state.dailyActivities.find(a => a.date === today);
+        const newActivities = existingActivity
+          ? state.dailyActivities.map(a => a.date === today ? { ...a, tasksCompleted: completedToday } : a)
+          : [...state.dailyActivities, { date: today, tasksCompleted: completedToday }];
+        
+        return { trackedTasks: updated, dailyActivities: newActivities };
+      }),
+
+      // NEW: LeetCode Progress
+      leetCodeProgress: {
+        easySolved: 0,
+        mediumSolved: 0,
+        hardSolved: 0,
+        target: 200,
+      },
+      updateLeetCodeProgress: (updates) => set((state) => ({
+        leetCodeProgress: { ...state.leetCodeProgress, ...updates }
+      })),
+
+      // NEW: Daily Activity for streak
+      dailyActivities: [],
+      recordDailyActivity: (date) => set((state) => {
+        const existing = state.dailyActivities.find(a => a.date === date);
+        if (existing) {
+          return {
+            dailyActivities: state.dailyActivities.map(a =>
+              a.date === date ? { ...a, tasksCompleted: a.tasksCompleted + 1 } : a
+            )
+          };
+        }
+        return {
+          dailyActivities: [...state.dailyActivities, { date, tasksCompleted: 1 }]
+        };
+      }),
     }),
     {
       name: 'preptrack-storage',
@@ -483,8 +562,57 @@ export const getStudyTimeForPeriod = (sessions: StudySession[], days: number) =>
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   const cutoffStr = cutoff.toISOString().split('T')[0];
-  
   return sessions.filter((s) => s.date >= cutoffStr);
+};
+
+// Helper to calculate streak from daily activities
+export const calculateStreak = (activities: DailyActivity[]): { current: number; longest: number } => {
+  if (activities.length === 0) return { current: 0, longest: 0 };
+  
+  const sortedDates = [...new Set(activities.filter(a => a.tasksCompleted > 0).map(a => a.date))].sort().reverse();
+  
+  if (sortedDates.length === 0) return { current: 0, longest: 0 };
+  
+  // Current streak
+  let current = 0;
+  const today = getTodayString();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+  
+  // Start from today or yesterday
+  let startDate = sortedDates[0] === today || sortedDates[0] === yesterdayStr ? sortedDates[0] : null;
+  if (startDate) {
+    for (let i = 0; i < 365; i++) {
+      const checkDate = new Date(startDate);
+      checkDate.setDate(checkDate.getDate() - i);
+      const dateStr = checkDate.toISOString().split('T')[0];
+      if (sortedDates.includes(dateStr)) {
+        current++;
+      } else {
+        break;
+      }
+    }
+  }
+  
+  // Longest streak
+  let longest = 0;
+  let tempStreak = 1;
+  const allDates = sortedDates.sort();
+  for (let i = 1; i < allDates.length; i++) {
+    const prev = new Date(allDates[i - 1]);
+    const curr = new Date(allDates[i]);
+    const diff = (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24);
+    if (diff === 1) {
+      tempStreak++;
+    } else {
+      longest = Math.max(longest, tempStreak);
+      tempStreak = 1;
+    }
+  }
+  longest = Math.max(longest, tempStreak, current);
+  
+  return { current, longest };
 };
 
 // Motivational quotes
