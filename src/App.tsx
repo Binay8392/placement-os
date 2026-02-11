@@ -21,6 +21,9 @@ import CalendarPage from "@/pages/CalendarPage";
 import ReflectPage from "@/pages/ReflectPage";
 import ProfilePage from "@/pages/ProfilePage";
 import FirebaseAuthPage from "@/pages/FirebaseAuthPage";
+import TaskTrackerPage from "@/pages/TaskTrackerPage";
+import LeetCodePage from "@/pages/LeetCodePage";
+import CompanyReadinessPage from "@/pages/CompanyReadinessPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +47,9 @@ function AppContent() {
           <Route path="/analytics" element={<FirebaseProtectedRoute><AnalyticsPage /></FirebaseProtectedRoute>} />
           <Route path="/reflect" element={<FirebaseProtectedRoute><ReflectPage /></FirebaseProtectedRoute>} />
           <Route path="/profile" element={<FirebaseProtectedRoute><ProfilePage /></FirebaseProtectedRoute>} />
+          <Route path="/tasks" element={<FirebaseProtectedRoute><TaskTrackerPage /></FirebaseProtectedRoute>} />
+          <Route path="/leetcode" element={<FirebaseProtectedRoute><LeetCodePage /></FirebaseProtectedRoute>} />
+          <Route path="/company-readiness" element={<FirebaseProtectedRoute><CompanyReadinessPage /></FirebaseProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
