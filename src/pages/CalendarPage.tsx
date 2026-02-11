@@ -106,7 +106,7 @@ function DayCell({
     <div 
       onClick={() => onSelect(date)}
       className={`
-        min-h-[100px] p-1.5 border border-border/50 cursor-pointer transition-all
+        min-h-[60px] md:min-h-[100px] p-1 md:p-1.5 border border-border/50 cursor-pointer transition-all
         hover:bg-accent/50
         ${!isCurrentMonth ? 'bg-muted/30 opacity-50' : 'bg-card'}
         ${today ? 'ring-2 ring-primary ring-inset' : ''}
@@ -161,7 +161,7 @@ function WeekView({
           <Card 
             key={dateKey} 
             className={`
-              min-h-[200px] cursor-pointer transition-all hover:border-primary/50
+              min-h-[120px] md:min-h-[200px] cursor-pointer transition-all hover:border-primary/50
               ${today ? 'ring-2 ring-primary' : ''}
             `}
             onClick={() => onSelectDate(day)}
@@ -657,7 +657,7 @@ export default function CalendarPage() {
   ).length;
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 md:ml-64">
+    <div className="min-h-screen pb-24 md:pb-8">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -682,7 +682,7 @@ export default function CalendarPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">

@@ -335,7 +335,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 md:ml-64">
+    <div className="min-h-screen pb-24 md:pb-8">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         <header className="mb-6">
           <h1 className="text-2xl font-bold text-gradient">Profile</h1>
