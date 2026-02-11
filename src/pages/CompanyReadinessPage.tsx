@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '@/lib/store';
 import { motion } from 'framer-motion';
-import { Building2, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { Building2, CheckCircle2, AlertTriangle, XCircle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CompanyConfig {
@@ -29,6 +30,7 @@ function getReadinessLabel(score: number, minScore: number) {
 }
 
 export default function CompanyReadinessPage() {
+  const navigate = useNavigate();
   const { trackedTasks, leetCodeProgress, aptitudeTopics, dsaTopics } = useStore();
 
   const scores = useMemo(() => {
@@ -105,7 +107,8 @@ export default function CompanyReadinessPage() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="glass-card border border-border rounded-2xl p-4"
+                className="glass-card border border-border rounded-2xl p-4 cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => navigate(`/company/${company.name}`)}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -138,6 +141,9 @@ export default function CompanyReadinessPage() {
                     animate={{ width: `${company.score}%` }}
                     transition={{ duration: 1, delay: i * 0.1 }}
                   />
+                </div>
+                <div className="flex items-center justify-end mt-2">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">View Dashboard <ChevronRight className="w-3 h-3" /></span>
                 </div>
               </motion.div>
             );

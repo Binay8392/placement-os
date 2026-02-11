@@ -138,6 +138,25 @@ export interface LeetCodeProgress {
   target: number;
 }
 
+// Company Hub: HR question answers & interview experiences
+export interface HRQuestionAnswer {
+  questionId: string;
+  company: string;
+  practiced: boolean;
+  answer: string;
+}
+
+export interface UserInterviewExperience {
+  id: string;
+  company: string;
+  role: string;
+  date: string;
+  rounds: string;
+  questions: string;
+  tips: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+}
+
 // NEW: Daily streak tracking
 export interface DailyActivity {
   date: string;
@@ -263,6 +282,15 @@ interface AppState {
   // NEW: Daily Activity for streak
   dailyActivities: DailyActivity[];
   recordDailyActivity: (date: string) => void;
+
+  // Company Hub
+  hrAnswers: HRQuestionAnswer[];
+  setHRAnswer: (questionId: string, company: string, answer: string) => void;
+  toggleHRPracticed: (questionId: string, company: string) => void;
+
+  userInterviewExperiences: UserInterviewExperience[];
+  addInterviewExperience: (exp: Omit<UserInterviewExperience, 'id'>) => void;
+  deleteInterviewExperience: (id: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -547,6 +575,31 @@ export const useStore = create<AppState>()(
           dailyActivities: [...state.dailyActivities, { date, tasksCompleted: 1 }]
         };
       }),
+
+      // Company Hub
+      hrAnswers: [],
+      setHRAnswer: (questionId, company, answer) => set((state) => {
+        const existing = state.hrAnswers.find(a => a.questionId === questionId && a.company === company);
+        if (existing) {
+          return { hrAnswers: state.hrAnswers.map(a => a.questionId === questionId && a.company === company ? { ...a, answer } : a) };
+        }
+        return { hrAnswers: [...state.hrAnswers, { questionId, company, practiced: false, answer }] };
+      }),
+      toggleHRPracticed: (questionId, company) => set((state) => {
+        const existing = state.hrAnswers.find(a => a.questionId === questionId && a.company === company);
+        if (existing) {
+          return { hrAnswers: state.hrAnswers.map(a => a.questionId === questionId && a.company === company ? { ...a, practiced: !a.practiced } : a) };
+        }
+        return { hrAnswers: [...state.hrAnswers, { questionId, company, practiced: true, answer: '' }] };
+      }),
+
+      userInterviewExperiences: [],
+      addInterviewExperience: (exp) => set((state) => ({
+        userInterviewExperiences: [...state.userInterviewExperiences, { ...exp, id: Date.now().toString() }]
+      })),
+      deleteInterviewExperience: (id) => set((state) => ({
+        userInterviewExperiences: state.userInterviewExperiences.filter(e => e.id !== id)
+      })),
     }),
     {
       name: 'preptrack-storage',
