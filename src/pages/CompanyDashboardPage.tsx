@@ -50,7 +50,7 @@ export default function CompanyDashboardPage() {
 
       <main className="px-4">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full flex overflow-x-auto gap-1 h-auto flex-wrap">
+          <TabsList className="w-full flex overflow-x-auto gap-1 h-auto flex-nowrap no-scrollbar">
             <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
             <TabsTrigger value="roadmap" className="text-xs">Roadmap</TabsTrigger>
             <TabsTrigger value="tasks" className="text-xs">Tasks</TabsTrigger>

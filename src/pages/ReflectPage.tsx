@@ -323,7 +323,7 @@ export default function ReflectPage() {
   };
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8 md:ml-64">
+    <div className="min-h-screen pb-24 md:pb-8">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -342,7 +342,7 @@ export default function ReflectPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">

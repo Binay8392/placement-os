@@ -259,7 +259,7 @@ export default function TaskTrackerPage() {
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">{task.source}</Badge>
                   </div>
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
                   <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(task)}>
                     <Edit3 className="w-3.5 h-3.5" />
                   </Button>

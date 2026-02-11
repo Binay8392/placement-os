@@ -193,7 +193,7 @@ export default function AnalyticsPage() {
         {/* Placement Readiness Score - Hero */}
         <motion.section initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           className="bg-card border border-border rounded-2xl p-5">
-          <div className="flex items-center gap-5">
+          <div className="flex flex-col sm:flex-row items-center gap-5">
             <div className="relative w-32 h-32 shrink-0">
               <ProgressRing progress={readinessScore.total} size={128} strokeWidth={12}>
                 <div className="text-center">
