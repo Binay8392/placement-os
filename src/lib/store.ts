@@ -163,6 +163,70 @@ export interface DailyActivity {
   tasksCompleted: number;
 }
 
+// Community Hub types
+export interface CommunityExperience {
+  id: string;
+  userId: string;
+  username: string;
+  company: string;
+  role: string;
+  interviewDate: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  rounds: string;
+  questions: string;
+  tips: string;
+  likes: number;
+  createdAt: string;
+}
+
+export interface CommunityQuestion {
+  id: string;
+  userId: string;
+  username: string;
+  title: string;
+  description: string;
+  company: string;
+  answers: CommunityAnswer[];
+  bestAnswerId?: string;
+  likes: number;
+  createdAt: string;
+}
+
+export interface CommunityAnswer {
+  id: string;
+  userId: string;
+  username: string;
+  answerText: string;
+  upvotes: number;
+  createdAt: string;
+}
+
+export interface CommunityVlog {
+  id: string;
+  userId: string;
+  username: string;
+  title: string;
+  description: string;
+  company: string;
+  videoUrl: string;
+  type: 'youtube' | 'text';
+  textContent?: string;
+  likes: number;
+  createdAt: string;
+}
+
+export interface CompanyEligibility {
+  id: string;
+  userId: string;
+  username: string;
+  company: string;
+  minCGPA: string;
+  backlogs: string;
+  branches: string;
+  additionalInfo: string;
+  createdAt: string;
+}
+
 // Initial DSA topics
 const initialDSATopics: DSATopic[] = [
   { id: 'tc', name: 'Time & Space Complexity', category: 'foundations', status: 'not-started', questionsSolved: 0, confidence: 0, notes: '' },
@@ -291,6 +355,29 @@ interface AppState {
   userInterviewExperiences: UserInterviewExperience[];
   addInterviewExperience: (exp: Omit<UserInterviewExperience, 'id'>) => void;
   deleteInterviewExperience: (id: string) => void;
+
+  // Community Hub
+  communityExperiences: CommunityExperience[];
+  addCommunityExperience: (exp: Omit<CommunityExperience, 'id' | 'likes' | 'createdAt'>) => void;
+  deleteCommunityExperience: (id: string) => void;
+  likeCommunityExperience: (id: string) => void;
+
+  communityQuestions: CommunityQuestion[];
+  addCommunityQuestion: (q: Omit<CommunityQuestion, 'id' | 'answers' | 'likes' | 'createdAt'>) => void;
+  deleteCommunityQuestion: (id: string) => void;
+  likeCommunityQuestion: (id: string) => void;
+  addCommunityAnswer: (questionId: string, answer: Omit<CommunityAnswer, 'id' | 'upvotes' | 'createdAt'>) => void;
+  upvoteCommunityAnswer: (questionId: string, answerId: string) => void;
+  markBestAnswer: (questionId: string, answerId: string) => void;
+
+  communityVlogs: CommunityVlog[];
+  addCommunityVlog: (vlog: Omit<CommunityVlog, 'id' | 'likes' | 'createdAt'>) => void;
+  deleteCommunityVlog: (id: string) => void;
+  likeCommunityVlog: (id: string) => void;
+
+  companyEligibilities: CompanyEligibility[];
+  addCompanyEligibility: (e: Omit<CompanyEligibility, 'id' | 'createdAt'>) => void;
+  deleteCompanyEligibility: (id: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -599,6 +686,61 @@ export const useStore = create<AppState>()(
       })),
       deleteInterviewExperience: (id) => set((state) => ({
         userInterviewExperiences: state.userInterviewExperiences.filter(e => e.id !== id)
+      })),
+
+      // Community Hub
+      communityExperiences: [],
+      addCommunityExperience: (exp) => set((state) => ({
+        communityExperiences: [{ ...exp, id: Date.now().toString(), likes: 0, createdAt: new Date().toISOString() }, ...state.communityExperiences]
+      })),
+      deleteCommunityExperience: (id) => set((state) => ({
+        communityExperiences: state.communityExperiences.filter(e => e.id !== id)
+      })),
+      likeCommunityExperience: (id) => set((state) => ({
+        communityExperiences: state.communityExperiences.map(e => e.id === id ? { ...e, likes: e.likes + 1 } : e)
+      })),
+
+      communityQuestions: [],
+      addCommunityQuestion: (q) => set((state) => ({
+        communityQuestions: [{ ...q, id: Date.now().toString(), answers: [], likes: 0, createdAt: new Date().toISOString() }, ...state.communityQuestions]
+      })),
+      deleteCommunityQuestion: (id) => set((state) => ({
+        communityQuestions: state.communityQuestions.filter(q => q.id !== id)
+      })),
+      likeCommunityQuestion: (id) => set((state) => ({
+        communityQuestions: state.communityQuestions.map(q => q.id === id ? { ...q, likes: q.likes + 1 } : q)
+      })),
+      addCommunityAnswer: (questionId, answer) => set((state) => ({
+        communityQuestions: state.communityQuestions.map(q => q.id === questionId ? {
+          ...q, answers: [...q.answers, { ...answer, id: Date.now().toString(), upvotes: 0, createdAt: new Date().toISOString() }]
+        } : q)
+      })),
+      upvoteCommunityAnswer: (questionId, answerId) => set((state) => ({
+        communityQuestions: state.communityQuestions.map(q => q.id === questionId ? {
+          ...q, answers: q.answers.map(a => a.id === answerId ? { ...a, upvotes: a.upvotes + 1 } : a)
+        } : q)
+      })),
+      markBestAnswer: (questionId, answerId) => set((state) => ({
+        communityQuestions: state.communityQuestions.map(q => q.id === questionId ? { ...q, bestAnswerId: answerId } : q)
+      })),
+
+      communityVlogs: [],
+      addCommunityVlog: (vlog) => set((state) => ({
+        communityVlogs: [{ ...vlog, id: Date.now().toString(), likes: 0, createdAt: new Date().toISOString() }, ...state.communityVlogs]
+      })),
+      deleteCommunityVlog: (id) => set((state) => ({
+        communityVlogs: state.communityVlogs.filter(v => v.id !== id)
+      })),
+      likeCommunityVlog: (id) => set((state) => ({
+        communityVlogs: state.communityVlogs.map(v => v.id === id ? { ...v, likes: v.likes + 1 } : v)
+      })),
+
+      companyEligibilities: [],
+      addCompanyEligibility: (e) => set((state) => ({
+        companyEligibilities: [{ ...e, id: Date.now().toString(), createdAt: new Date().toISOString() }, ...state.companyEligibilities]
+      })),
+      deleteCompanyEligibility: (id) => set((state) => ({
+        companyEligibilities: state.companyEligibilities.filter(e => e.id !== id)
       })),
     }),
     {
