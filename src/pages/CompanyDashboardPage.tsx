@@ -19,8 +19,9 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function CompanyDashboardPage() {
-  const { companyId } = useParams<{ companyId: string }>();
+  const { companyId: rawCompanyId } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
+  const companyId = rawCompanyId ? decodeURIComponent(rawCompanyId) : null;
   const company = companyId ? companyDataMap[companyId] : null;
 
   if (!company) {
