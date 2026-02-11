@@ -17,9 +17,12 @@ interface CompanyConfig {
 const companies: CompanyConfig[] = [
   { name: 'TCS', codingWeight: 0.3, aptitudeWeight: 0.4, csWeight: 0.3, minScore: 55, logo: '🏢' },
   { name: 'Infosys', codingWeight: 0.35, aptitudeWeight: 0.35, csWeight: 0.3, minScore: 60, logo: '🏛️' },
-  { name: 'Wipro', codingWeight: 0.3, aptitudeWeight: 0.4, csWeight: 0.3, minScore: 55, logo: '🌐' },
   { name: 'Accenture', codingWeight: 0.35, aptitudeWeight: 0.35, csWeight: 0.3, minScore: 60, logo: '💼' },
+  { name: 'Wipro', codingWeight: 0.3, aptitudeWeight: 0.4, csWeight: 0.3, minScore: 55, logo: '🌐' },
   { name: 'Capgemini', codingWeight: 0.4, aptitudeWeight: 0.3, csWeight: 0.3, minScore: 60, logo: '🔷' },
+  { name: 'Cognizant', codingWeight: 0.35, aptitudeWeight: 0.35, csWeight: 0.3, minScore: 55, logo: '🧠' },
+  { name: 'Deloitte', codingWeight: 0.4, aptitudeWeight: 0.3, csWeight: 0.3, minScore: 65, logo: '📊' },
+  { name: 'IBM', codingWeight: 0.4, aptitudeWeight: 0.3, csWeight: 0.3, minScore: 60, logo: '💻' },
   { name: 'Product Companies', codingWeight: 0.55, aptitudeWeight: 0.15, csWeight: 0.3, minScore: 75, logo: '🚀' },
 ];
 
@@ -107,8 +110,8 @@ export default function CompanyReadinessPage() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="glass-card border border-border rounded-2xl p-4 cursor-pointer hover:border-primary/50 transition-colors"
-                onClick={() => navigate(`/company/${company.name}`)}
+                className="bg-card border border-border rounded-2xl p-4 cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => navigate(`/company/${encodeURIComponent(company.name)}`)}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
