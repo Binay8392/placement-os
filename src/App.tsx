@@ -24,6 +24,7 @@ import FirebaseAuthPage from "@/pages/FirebaseAuthPage";
 import TaskTrackerPage from "@/pages/TaskTrackerPage";
 import LeetCodePage from "@/pages/LeetCodePage";
 import CompanyReadinessPage from "@/pages/CompanyReadinessPage";
+import CompanyTaskGeneratorPage from "@/pages/CompanyTaskGeneratorPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ function AppContent() {
           <Route path="/tasks" element={<FirebaseProtectedRoute><TaskTrackerPage /></FirebaseProtectedRoute>} />
           <Route path="/leetcode" element={<FirebaseProtectedRoute><LeetCodePage /></FirebaseProtectedRoute>} />
           <Route path="/company-readiness" element={<FirebaseProtectedRoute><CompanyReadinessPage /></FirebaseProtectedRoute>} />
+          <Route path="/company-tasks" element={<FirebaseProtectedRoute><CompanyTaskGeneratorPage /></FirebaseProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
