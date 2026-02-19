@@ -14,6 +14,285 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_answers: {
+        Row: {
+          answer_text: string
+          created_at: string
+          id: string
+          question_id: string
+          upvoted_by: string[]
+          upvotes: number
+          user_id: string
+          username: string
+        }
+        Insert: {
+          answer_text: string
+          created_at?: string
+          id?: string
+          question_id: string
+          upvoted_by?: string[]
+          upvotes?: number
+          user_id: string
+          username: string
+        }
+        Update: {
+          answer_text?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+          upvoted_by?: string[]
+          upvotes?: number
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "community_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_eligibilities: {
+        Row: {
+          additional_info: string | null
+          backlogs: string | null
+          branches: string | null
+          company: string
+          created_at: string
+          id: string
+          min_cgpa: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          additional_info?: string | null
+          backlogs?: string | null
+          branches?: string | null
+          company: string
+          created_at?: string
+          id?: string
+          min_cgpa: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          additional_info?: string | null
+          backlogs?: string | null
+          branches?: string | null
+          company?: string
+          created_at?: string
+          id?: string
+          min_cgpa?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      community_experience_comments: {
+        Row: {
+          created_at: string
+          experience_id: string
+          id: string
+          text: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          experience_id: string
+          id?: string
+          text: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          experience_id?: string
+          id?: string
+          text?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_experience_comments_experience_id_fkey"
+            columns: ["experience_id"]
+            isOneToOne: false
+            referencedRelation: "community_experiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_experiences: {
+        Row: {
+          company: string
+          created_at: string
+          difficulty: string
+          id: string
+          interview_date: string | null
+          liked_by: string[]
+          likes: number
+          questions: string | null
+          role: string
+          rounds: string | null
+          tips: string | null
+          user_id: string
+          username: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          interview_date?: string | null
+          liked_by?: string[]
+          likes?: number
+          questions?: string | null
+          role: string
+          rounds?: string | null
+          tips?: string | null
+          user_id: string
+          username: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          difficulty?: string
+          id?: string
+          interview_date?: string | null
+          liked_by?: string[]
+          likes?: number
+          questions?: string | null
+          role?: string
+          rounds?: string | null
+          tips?: string | null
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      community_questions: {
+        Row: {
+          best_answer_id: string | null
+          company: string
+          created_at: string
+          description: string | null
+          id: string
+          liked_by: string[]
+          likes: number
+          title: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          best_answer_id?: string | null
+          company: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          liked_by?: string[]
+          likes?: number
+          title: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          best_answer_id?: string | null
+          company?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          liked_by?: string[]
+          likes?: number
+          title?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      community_vlog_comments: {
+        Row: {
+          created_at: string
+          id: string
+          text: string
+          user_id: string
+          username: string
+          vlog_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          text: string
+          user_id: string
+          username: string
+          vlog_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          text?: string
+          user_id?: string
+          username?: string
+          vlog_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_vlog_comments_vlog_id_fkey"
+            columns: ["vlog_id"]
+            isOneToOne: false
+            referencedRelation: "community_vlogs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_vlogs: {
+        Row: {
+          company: string
+          created_at: string
+          description: string | null
+          id: string
+          liked_by: string[]
+          likes: number
+          text_content: string | null
+          title: string
+          type: string
+          user_id: string
+          username: string
+          video_url: string | null
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          liked_by?: string[]
+          likes?: number
+          text_content?: string | null
+          title: string
+          type?: string
+          user_id: string
+          username: string
+          video_url?: string | null
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          liked_by?: string[]
+          likes?: number
+          text_content?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+          username?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       habits: {
         Row: {
           completed_dates: string[]
