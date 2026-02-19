@@ -329,8 +329,11 @@ export default function ProfilePage() {
     if (!profile.avatarUrl) return;
 
     try {
-      const oldPath = profile.avatarUrl.split('/').pop();
-      if (oldPath) {
+      // Extract the scoped path (userId/filename) from the full public URL
+      const url = new URL(profile.avatarUrl);
+      const pathParts = url.pathname.split('/avatars/');
+      if (pathParts[1]) {
+        const oldPath = decodeURIComponent(pathParts[1]);
         await supabase.storage.from('avatars').remove([oldPath]);
       }
       updateProfile({ avatarUrl: '' });
