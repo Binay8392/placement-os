@@ -275,13 +275,21 @@ export default function ProfilePage() {
     try {
       // Generate unique filename
       const fileExt = file.name.split('.').pop();
-      const fileName = `avatar-${Date.now()}.${fileExt}`;
+      // Use Firebase user ID to scope uploads to user's own folder
+      const userFolder = user?.uid || 'anonymous';
+      const fileName = `${userFolder}/avatar-${Date.now()}.${fileExt}`;
 
       // Delete old avatar if exists
       if (profile.avatarUrl) {
-        const oldPath = profile.avatarUrl.split('/').pop();
-        if (oldPath) {
-          await supabase.storage.from('avatars').remove([oldPath]);
+        try {
+          const url = new URL(profile.avatarUrl);
+          const pathParts = url.pathname.split('/avatars/');
+          if (pathParts[1]) {
+            const oldPath = decodeURIComponent(pathParts[1]);
+            await supabase.storage.from('avatars').remove([oldPath]);
+          }
+        } catch {
+          // Ignore deletion errors for old avatars
         }
       }
 

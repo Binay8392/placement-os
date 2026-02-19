@@ -4,18 +4,47 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+// Simple in-memory rate limiter
+const rateLimits = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 3600000; // 1 hour
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const entry = rateLimits.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimits.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return true;
+  entry.count++;
+  return false;
+}
+
+// Email validation
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
+}
+
+// Sanitize HTML content to prevent injection
+function sanitize(str: string | undefined): string {
+  if (!str) return '';
+  return str.replace(/[<>&"']/g, (c) => {
+    const map: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' };
+    return map[c] || c;
+  }).slice(0, 1000); // Limit length
+}
 
 interface ReminderRequest {
   email: string;
-  // For job applications
   company?: string;
   role?: string;
   type: "interview" | "followup" | "exam";
   date: string;
   notes?: string;
-  // For govt exams
   examName?: string;
   organization?: string;
   category?: string;
@@ -23,17 +52,24 @@ interface ReminderRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Validate authorization header exists
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const data: ReminderRequest = await req.json();
     const { email, type, date, notes } = data;
 
-    console.log(`Sending ${type} reminder to ${email}`);
-
+    // Validate required fields
     if (!email || !type || !date) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
@@ -41,11 +77,36 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Validate email format
+    if (!isValidEmail(email)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate type
+    if (!["interview", "followup", "exam"].includes(type)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid reminder type" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limit by email
+    if (isRateLimited(email)) {
+      return new Response(
+        JSON.stringify({ error: "Rate limit exceeded. Try again later." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Sending ${type} reminder to ${email}`);
+
     let subject: string;
     let html: string;
 
     if (type === "exam") {
-      // Govt/Banking exam reminder
       const { examName, organization, category, postName } = data;
       
       if (!examName || !organization) {
@@ -55,7 +116,14 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      subject = `📝 Exam Reminder: ${examName} - ${organization}`;
+      const safeExamName = sanitize(examName);
+      const safeOrg = sanitize(organization);
+      const safeCategory = sanitize(category);
+      const safePostName = sanitize(postName);
+      const safeDate = sanitize(date);
+      const safeNotes = sanitize(notes);
+
+      subject = `📝 Exam Reminder: ${safeExamName} - ${safeOrg}`;
       
       html = `
         <!DOCTYPE html>
@@ -84,17 +152,17 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div class="content">
               <div class="highlight">
-                <span class="category">${category || 'Govt Exam'}</span>
-                <h2>${examName}</h2>
-                <p><strong>Organization:</strong> ${organization}</p>
-                ${postName ? `<p><strong>Post:</strong> ${postName}</p>` : ''}
-                <p class="date">📅 ${date}</p>
+                <span class="category">${safeCategory || 'Govt Exam'}</span>
+                <h2>${safeExamName}</h2>
+                <p><strong>Organization:</strong> ${safeOrg}</p>
+                ${safePostName ? `<p><strong>Post:</strong> ${safePostName}</p>` : ''}
+                <p class="date">📅 ${safeDate}</p>
               </div>
-              ${notes ? `<div class="highlight"><p><strong>Notes:</strong> ${notes}</p></div>` : ''}
+              ${safeNotes ? `<div class="highlight"><p><strong>Notes:</strong> ${safeNotes}</p></div>` : ''}
               <div class="checklist">
                 <p><strong>📋 Pre-Exam Checklist:</strong></p>
                 <ul>
-                  <li>✅ Check admit card & ID proof</li>
+                  <li>✅ Check admit card &amp; ID proof</li>
                   <li>✅ Know your exam center location</li>
                   <li>✅ Carry required stationery</li>
                   <li>✅ Reach exam center 1 hour early</li>
@@ -111,7 +179,6 @@ const handler = async (req: Request): Promise<Response> => {
         </html>
       `;
     } else {
-      // Job application reminder (interview or followup)
       const { company, role } = data;
       
       if (!company || !role) {
@@ -121,10 +188,15 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
+      const safeCompany = sanitize(company);
+      const safeRole = sanitize(role);
+      const safeDate = sanitize(date);
+      const safeNotes = sanitize(notes);
+
       const isInterview = type === "interview";
       subject = isInterview 
-        ? `🎯 Interview Reminder: ${company} - ${role}`
-        : `📋 Follow-up Reminder: ${company} - ${role}`;
+        ? `🎯 Interview Reminder: ${safeCompany} - ${safeRole}`
+        : `📋 Follow-up Reminder: ${safeCompany} - ${safeRole}`;
 
       html = `
         <!DOCTYPE html>
@@ -150,11 +222,11 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div class="content">
               <div class="highlight">
-                <h2>${company}</h2>
-                <p><strong>Role:</strong> ${role}</p>
-                <p class="date">📅 ${date}</p>
+                <h2>${safeCompany}</h2>
+                <p><strong>Role:</strong> ${safeRole}</p>
+                <p class="date">📅 ${safeDate}</p>
               </div>
-              ${notes ? `<div class="highlight"><p><strong>Notes:</strong> ${notes}</p></div>` : ''}
+              ${safeNotes ? `<div class="highlight"><p><strong>Notes:</strong> ${safeNotes}</p></div>` : ''}
               <p>${isInterview 
                 ? "Don't forget to prepare for your upcoming interview! Review the job description, practice common questions, and get a good night's rest." 
                 : "Time to follow up on your application. Reach out to the recruiter or hiring manager to check on your application status."
