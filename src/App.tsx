@@ -8,6 +8,7 @@ import { FirebaseAuthProvider } from "@/hooks/useFirebaseAuth";
 import { FirebaseProtectedRoute } from "@/components/FirebaseProtectedRoute";
 import { BottomNav, DesktopSidebar } from "@/components/Navigation";
 import { useSwipeNavigation } from "@/hooks/use-swipe-navigation";
+import { Analytics } from "@vercel/analytics/react";
 
 // Pages
 import Dashboard from "@/pages/Dashboard";
@@ -74,6 +75,7 @@ const App = () => (
           <BrowserRouter>
             <AppContent />
           </BrowserRouter>
+          <Analytics />
         </TooltipProvider>
       </FirebaseAuthProvider>
     </ThemeProvider>
