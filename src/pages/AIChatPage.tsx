@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles, Trash2 } from 'lucide-react';
+import { Send, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ChatRobot } from '@/components/ChatRobot';
 import { cn } from '@/lib/utils';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { ChatMessage, streamChat } from '@/lib/chatService';
@@ -72,9 +73,7 @@ export default function AIChatPage() {
       {/* Header */}
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <Sparkles className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <ChatRobot size={48} />
           <div>
             <h1 className="text-lg font-bold text-foreground">PrepTrack AI</h1>
             <p className="text-xs text-muted-foreground">Your placement prep assistant • 10 free messages/day</p>
@@ -89,9 +88,7 @@ export default function AIChatPage() {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-6">
-            <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center shadow-glow">
-              <Sparkles className="w-8 h-8 text-primary-foreground" />
-            </div>
+            <ChatRobot size={100} />
             <div className="text-center space-y-2">
               <h2 className="text-xl font-bold text-foreground">Hi! I'm PrepTrack AI 👋</h2>
               <p className="text-sm text-muted-foreground max-w-md">I can help with DSA, coding interviews, aptitude, resume tips, and everything placement-related.</p>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Sparkles, ArrowRight } from 'lucide-react';
+import { X, Send, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ChatRobot } from '@/components/ChatRobot';
 import { cn } from '@/lib/utils';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { ChatMessage, streamChat } from '@/lib/chatService';
@@ -61,13 +62,13 @@ export function FloatingChat() {
 
   return (
     <>
-      {/* Floating button */}
+      {/* Floating robot button */}
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-14 h-14 rounded-full gradient-primary shadow-glow flex items-center justify-center hover:scale-110 transition-transform"
+          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 w-16 h-16 rounded-full bg-card border-2 border-primary shadow-glow flex items-center justify-center hover:scale-110 transition-transform"
         >
-          <Sparkles className="w-6 h-6 text-primary-foreground" />
+          <ChatRobot size={44} />
         </button>
       )}
 
@@ -77,7 +78,7 @@ export function FloatingChat() {
           {/* Header */}
           <div className="gradient-primary p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary-foreground" />
+              <ChatRobot size={28} />
               <span className="font-semibold text-primary-foreground text-sm">PrepTrack AI</span>
             </div>
             <div className="flex items-center gap-1">
@@ -93,8 +94,8 @@ export function FloatingChat() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {messages.length === 0 && (
-              <div className="text-center text-muted-foreground text-xs mt-8 space-y-2">
-                <Sparkles className="w-8 h-8 mx-auto text-primary/40" />
+              <div className="text-center text-muted-foreground text-xs mt-4 space-y-2">
+                <ChatRobot size={64} />
                 <p>Ask me anything about DSA, interviews, coding, or placements!</p>
                 <p className="text-[10px]">10 free messages/day</p>
               </div>
