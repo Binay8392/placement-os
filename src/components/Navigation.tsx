@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, Timer, CheckCircle2, Code2, User,
   BookOpen, Briefcase, Calendar, BarChart3, Lightbulb,
-  MoreHorizontal, LogOut, ListChecks, Building2, Terminal, Factory, Users, CalendarDays
+  MoreHorizontal, LogOut, ListChecks, Building2, Terminal, Factory, Users, CalendarDays, FileText
 } from 'lucide-react';
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger,
@@ -32,6 +32,7 @@ const moreNavItems = [
   { to: '/placements', icon: Briefcase, label: 'Placements' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/reflect', icon: Lightbulb, label: 'Reflect' },
+  { to: '/resume-builder', icon: FileText, label: 'Resume' },
   { to: '/profile', icon: User, label: 'Profile' },
 ];
 
@@ -51,6 +52,7 @@ const allNavItems = [
   { to: '/placements', icon: Briefcase, label: 'Placements' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/reflect', icon: Lightbulb, label: 'Reflect' },
+  { to: '/resume-builder', icon: FileText, label: 'Resume Builder' },
   { to: '/profile', icon: User, label: 'Profile' },
 ];
 
