@@ -1,18 +1,32 @@
 import { useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Download, RotateCcw, FileText, Eye, PenLine } from 'lucide-react';
+import { Download, RotateCcw, FileText, Eye, PenLine, ChevronDown } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
 import { useResumeData } from '@/hooks/useResumeData';
 import { ResumeForm } from '@/components/resume-builder/ResumeForm';
 import { ResumePreview } from '@/components/resume-builder/ResumePreview';
+import type { ResumeTemplate } from '@/components/resume-builder/ResumePreview';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const TEMPLATES: { id: ResumeTemplate; label: string; desc: string }[] = [
+  { id: 'modern', label: 'Modern', desc: 'Clean with accent colors' },
+  { id: 'classic', label: 'Classic', desc: 'Traditional professional' },
+  { id: 'minimal', label: 'Minimal', desc: 'Simple & elegant' },
+];
 
 export default function ResumeBuilderPage() {
   const resumeRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
   const [mobileView, setMobileView] = useState<'form' | 'preview'>('form');
+  const [template, setTemplate] = useState<ResumeTemplate>('modern');
 
   const {
     data, updatePersonal, setSummary,
@@ -107,11 +121,31 @@ export default function ResumeBuilderPage() {
                 <Eye className="w-3.5 h-3.5" />
               </button>
             </div>
+            {/* Template switcher */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                  {TEMPLATES.find(t => t.id === template)?.label} <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="z-50 bg-popover border border-border shadow-lg">
+                {TEMPLATES.map(t => (
+                  <DropdownMenuItem
+                    key={t.id}
+                    onClick={() => setTemplate(t.id)}
+                    className={cn("flex flex-col items-start gap-0.5 cursor-pointer", template === t.id && "bg-accent")}
+                  >
+                    <span className="font-medium text-sm">{t.label}</span>
+                    <span className="text-xs text-muted-foreground">{t.desc}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="outline" size="sm" onClick={resetResume} className="gap-1.5 text-xs">
               <RotateCcw className="w-3.5 h-3.5" /> Reset
             </Button>
             <Button size="sm" onClick={handleDownload} disabled={downloading} className="gap-1.5 text-xs gradient-primary text-primary-foreground">
-              <Download className="w-3.5 h-3.5" /> {downloading ? 'Generating...' : 'Download PDF'}
+              <Download className="w-3.5 h-3.5" /> {downloading ? 'Generating...' : 'PDF'}
             </Button>
           </div>
         </div>
@@ -161,7 +195,7 @@ export default function ResumeBuilderPage() {
           <div className="p-4 md:p-6">
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 text-center">Live Preview</p>
             <div className="overflow-hidden rounded-lg border border-border/30 shadow-lg">
-              <ResumePreview ref={resumeRef} data={data} />
+              <ResumePreview ref={resumeRef} data={data} template={template} />
             </div>
           </div>
         </motion.div>
