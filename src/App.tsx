@@ -27,6 +27,7 @@ import CompanyReadinessPage from "@/pages/CompanyReadinessPage";
 import CompanyTaskGeneratorPage from "@/pages/CompanyTaskGeneratorPage";
 import CompanyDashboardPage from "@/pages/CompanyDashboardPage";
 import CommunityPage from "@/pages/CommunityPage";
+import DailyPlanPage from "@/pages/DailyPlanPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ function AppContent() {
           <Route path="/company-tasks" element={<FirebaseProtectedRoute><CompanyTaskGeneratorPage /></FirebaseProtectedRoute>} />
           <Route path="/company/:companyId" element={<FirebaseProtectedRoute><CompanyDashboardPage /></FirebaseProtectedRoute>} />
           <Route path="/community" element={<FirebaseProtectedRoute><CommunityPage /></FirebaseProtectedRoute>} />
+          <Route path="/daily-plan" element={<FirebaseProtectedRoute><DailyPlanPage /></FirebaseProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
