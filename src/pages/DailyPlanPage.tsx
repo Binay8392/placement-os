@@ -7,6 +7,7 @@ import { StatsCards } from '@/components/daily-planner/StatsCards';
 import { ProgressBar } from '@/components/daily-planner/ProgressBar';
 import { TaskList } from '@/components/daily-planner/TaskList';
 import { AddTaskModal } from '@/components/daily-planner/AddTaskModal';
+import { HabitTrackerGrid } from '@/components/daily-planner/HabitTrackerGrid';
 import type { DailyTask } from '@/hooks/useDailyTasks';
 
 export default function DailyPlanPage() {
@@ -88,6 +89,9 @@ export default function DailyPlanPage() {
             onReorder={reorderTasks}
           />
         </motion.div>
+
+        {/* Habit Tracker Grid */}
+        <HabitTrackerGrid />
       </div>
 
       <AddTaskModal
