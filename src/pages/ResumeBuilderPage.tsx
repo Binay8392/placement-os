@@ -28,13 +28,39 @@ export default function ResumeBuilderPage() {
     if (!resumeRef.current) return;
     setDownloading(true);
     try {
-      const canvas = await html2canvas(resumeRef.current, {
+      // Temporarily ensure preview is visible and unscaled for capture
+      const el = resumeRef.current;
+      const prevTransform = el.style.transform;
+      const prevTransformOrigin = el.style.transformOrigin;
+      el.style.transform = 'none';
+      el.style.transformOrigin = 'top left';
+
+      // If parent is hidden (mobile), temporarily show it
+      const previewPanel = el.closest('[data-preview-panel]') as HTMLElement | null;
+      const wasHidden = previewPanel && previewPanel.classList.contains('hidden');
+      if (wasHidden && previewPanel) {
+        previewPanel.classList.remove('hidden');
+        previewPanel.style.position = 'absolute';
+        previewPanel.style.left = '-9999px';
+      }
+
+      const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
-        width: resumeRef.current.scrollWidth,
-        height: resumeRef.current.scrollHeight,
+        width: el.scrollWidth,
+        height: el.scrollHeight,
       });
+
+      // Restore styles
+      el.style.transform = prevTransform;
+      el.style.transformOrigin = prevTransformOrigin;
+      if (wasHidden && previewPanel) {
+        previewPanel.classList.add('hidden');
+        previewPanel.style.position = '';
+        previewPanel.style.left = '';
+      }
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -124,6 +150,7 @@ export default function ResumeBuilderPage() {
 
         {/* Preview Panel */}
         <motion.div
+          data-preview-panel
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className={cn(
