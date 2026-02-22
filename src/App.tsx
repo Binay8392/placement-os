@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { FirebaseAuthProvider } from "@/hooks/useFirebaseAuth";
 import { FirebaseProtectedRoute } from "@/components/FirebaseProtectedRoute";
 import { BottomNav, DesktopSidebar } from "@/components/Navigation";
+import { FloatingChat } from "@/components/FloatingChat";
 import { useSwipeNavigation } from "@/hooks/use-swipe-navigation";
 
 // Pages
@@ -30,6 +31,8 @@ import CommunityPage from "@/pages/CommunityPage";
 import DailyPlanPage from "@/pages/DailyPlanPage";
 import ResumeBuilderPage from "@/pages/ResumeBuilderPage";
 import MockInterviewPage from "@/pages/MockInterviewPage";
+import AIChatPage from "@/pages/AIChatPage";
+import SupportUsPage from "@/pages/SupportUsPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,9 +65,12 @@ function AppContent() {
           <Route path="/daily-plan" element={<FirebaseProtectedRoute><DailyPlanPage /></FirebaseProtectedRoute>} />
           <Route path="/resume-builder" element={<FirebaseProtectedRoute><ResumeBuilderPage /></FirebaseProtectedRoute>} />
           <Route path="/mock-interview" element={<FirebaseProtectedRoute><MockInterviewPage /></FirebaseProtectedRoute>} />
+          <Route path="/ai-chat" element={<FirebaseProtectedRoute><AIChatPage /></FirebaseProtectedRoute>} />
+          <Route path="/support-us" element={<FirebaseProtectedRoute><SupportUsPage /></FirebaseProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+      <FloatingChat />
       <BottomNav />
     </div>
   );

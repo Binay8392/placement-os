@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_credits: {
+        Row: {
+          created_at: string
+          firebase_uid: string
+          id: string
+          is_pro: boolean
+          messages_used: number
+          usage_date: string
+        }
+        Insert: {
+          created_at?: string
+          firebase_uid: string
+          id?: string
+          is_pro?: boolean
+          messages_used?: number
+          usage_date?: string
+        }
+        Update: {
+          created_at?: string
+          firebase_uid?: string
+          id?: string
+          is_pro?: boolean
+          messages_used?: number
+          usage_date?: string
+        }
+        Relationships: []
+      }
       community_answers: {
         Row: {
           answer_text: string
