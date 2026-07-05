@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,44 +7,60 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FirebaseAuthProvider } from "@/hooks/useFirebaseAuth";
 import { FirebaseProtectedRoute } from "@/components/FirebaseProtectedRoute";
-import { BottomNav, DesktopSidebar } from "@/components/Navigation";
-import { FloatingChat } from "@/components/FloatingChat";
+import { AppShell } from "@/components/AppShell";
 import { useSwipeNavigation } from "@/hooks/use-swipe-navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Pages
-import Dashboard from "@/pages/Dashboard";
-import StudyTimer from "@/pages/StudyTimer";
-import HabitsPage from "@/pages/HabitsPage";
-import DSAPage from "@/pages/DSAPage";
-import AptitudePage from "@/pages/AptitudePage";
-import AnalyticsPage from "@/pages/AnalyticsPage";
-import PlacementsPage from "@/pages/PlacementsPage";
-import CalendarPage from "@/pages/CalendarPage";
-import ReflectPage from "@/pages/ReflectPage";
-import ProfilePage from "@/pages/ProfilePage";
-import FirebaseAuthPage from "@/pages/FirebaseAuthPage";
-import TaskTrackerPage from "@/pages/TaskTrackerPage";
-import LeetCodePage from "@/pages/LeetCodePage";
-import CompanyReadinessPage from "@/pages/CompanyReadinessPage";
-import CompanyTaskGeneratorPage from "@/pages/CompanyTaskGeneratorPage";
-import CompanyDashboardPage from "@/pages/CompanyDashboardPage";
-import CommunityPage from "@/pages/CommunityPage";
-import DailyPlanPage from "@/pages/DailyPlanPage";
-import ResumeBuilderPage from "@/pages/ResumeBuilderPage";
-import MockInterviewPage from "@/pages/MockInterviewPage";
-import AIChatPage from "@/pages/AIChatPage";
-import SupportUsPage from "@/pages/SupportUsPage";
-import NotFound from "@/pages/NotFound";
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const StudyTimer = lazy(() => import("@/pages/StudyTimer"));
+const HabitsPage = lazy(() => import("@/pages/HabitsPage"));
+const DSAPage = lazy(() => import("@/pages/DSAPage"));
+const AptitudePage = lazy(() => import("@/pages/AptitudePage"));
+const AnalyticsPage = lazy(() => import("@/pages/AnalyticsPage"));
+const PlacementsPage = lazy(() => import("@/pages/PlacementsPage"));
+const CalendarPage = lazy(() => import("@/pages/CalendarPage"));
+const ReflectPage = lazy(() => import("@/pages/ReflectPage"));
+const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
+const FirebaseAuthPage = lazy(() => import("@/pages/FirebaseAuthPage"));
+const TaskTrackerPage = lazy(() => import("@/pages/TaskTrackerPage"));
+const LeetCodePage = lazy(() => import("@/pages/LeetCodePage"));
+const CompanyReadinessPage = lazy(() => import("@/pages/CompanyReadinessPage"));
+const CompanyTaskGeneratorPage = lazy(() => import("@/pages/CompanyTaskGeneratorPage"));
+const CompanyDashboardPage = lazy(() => import("@/pages/CompanyDashboardPage"));
+const CommunityPage = lazy(() => import("@/pages/CommunityPage"));
+const DailyPlanPage = lazy(() => import("@/pages/DailyPlanPage"));
+const ResumeBuilderPage = lazy(() => import("@/pages/ResumeBuilderPage"));
+const MockInterviewPage = lazy(() => import("@/pages/MockInterviewPage"));
+const AIChatPage = lazy(() => import("@/pages/AIChatPage"));
+const SupportUsPage = lazy(() => import("@/pages/SupportUsPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+function RouteLoading() {
+  return (
+    <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6 xl:px-8" aria-label="Loading page">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-4 w-80 max-w-full" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton key={index} className="h-32 rounded-xl" />
+        ))}
+      </div>
+      <Skeleton className="h-80 rounded-xl" />
+    </div>
+  );
+}
 
 function AppContent() {
   useSwipeNavigation();
   
   return (
-    <div className="min-h-screen flex w-full">
-      <DesktopSidebar />
-      <main className="flex-1 md:ml-64">
+    <AppShell>
+      <Suspense fallback={<RouteLoading />}>
         <Routes>
           <Route path="/auth" element={<FirebaseAuthPage />} />
           <Route path="/" element={<FirebaseProtectedRoute><Dashboard /></FirebaseProtectedRoute>} />
@@ -69,10 +86,8 @@ function AppContent() {
           <Route path="/support-us" element={<FirebaseProtectedRoute><SupportUsPage /></FirebaseProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </main>
-      <FloatingChat />
-      <BottomNav />
-    </div>
+      </Suspense>
+    </AppShell>
   );
 }
 

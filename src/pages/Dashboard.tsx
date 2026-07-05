@@ -1,162 +1,643 @@
-import { useStore, getTodayString, getDailyQuote, getStudyTimeForPeriod, calculateStreak } from '@/lib/store';
-import { ProgressRing } from '@/components/ProgressRing';
-import { StatCard } from '@/components/StatCard';
-import { Clock, Target, Flame, BookOpen, Code2, Zap, ListChecks, Building2, Terminal } from 'lucide-react';
 import { useMemo } from 'react';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { Link } from 'react-router-dom';
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowRight,
+  BarChart3,
+  BookOpenCheck,
+  BriefcaseBusiness,
+  CalendarClock,
+  Check,
+  ChevronRight,
+  CircleDot,
+  Clock3,
+  Code2,
+  Flame,
+  Play,
+  Sparkles,
+  Target,
+  Trophy,
+  Zap,
+} from 'lucide-react';
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { motion } from 'framer-motion';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import {
+  calculateStreak,
+  getTodayString,
+  type TrackedTask,
+  useStore,
+} from '@/lib/store';
+import { ProgressRing } from '@/components/ProgressRing';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
-export default function Dashboard() {
-  const { habits, dsaTopics, studySessions, trackedTasks, leetCodeProgress, dailyActivities, aptitudeTopics } = useStore();
-  const { user } = useFirebaseAuth();
-  
-  const userName = user?.displayName?.split(' ')[0] || 'User';
-  const today = getTodayString();
-  const quote = useMemo(() => getDailyQuote(), []);
+const STUDY_GOAL_SECONDS = 2 * 60 * 60;
 
-  const todaySessions = studySessions.filter((s) => s.date === today);
-  const todayStudyTime = todaySessions.reduce((acc, s) => acc + s.duration, 0);
-  const todayStudyHours = Math.floor(todayStudyTime / 3600);
-  const todayStudyMins = Math.floor((todayStudyTime % 3600) / 60);
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
-  const weekSessions = getStudyTimeForPeriod(studySessions, 7);
-  const weekStudyTime = weekSessions.reduce((acc, s) => acc + s.duration, 0);
-  const weekStudyHours = Math.floor(weekStudyTime / 3600);
+function formatDuration(seconds: number) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours === 0) return `${minutes}m`;
+  return `${hours}h ${minutes}m`;
+}
 
-  const goodHabits = habits.filter((h) => h.type === 'good');
-  const completedToday = goodHabits.filter((h) => h.completedDates.includes(today)).length;
-  const habitProgress = goodHabits.length > 0 ? (completedToday / goodHabits.length) * 100 : 0;
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
-  const masteredTopics = dsaTopics.filter((t) => t.status === 'mastered').length;
-  const inProgressTopics = dsaTopics.filter((t) => t.status === 'in-progress').length;
-  const dsaProgress = (masteredTopics / dsaTopics.length) * 100;
-  const totalQuestionsSolved = dsaTopics.reduce((acc, t) => acc + t.questionsSolved, 0);
+function clampScore(score: number) {
+  return Math.max(0, Math.min(100, Math.round(score)));
+}
 
-  const streak = useMemo(() => calculateStreak(dailyActivities), [dailyActivities]);
-
-  // Quick readiness score
-  const readinessScore = useMemo(() => {
-    const codingTasks = trackedTasks.filter(t => t.status === 'Completed' && t.category === 'Coding');
-    const codingPoints = codingTasks.reduce((acc, t) => acc + (t.difficulty === 'Easy' ? 1 : t.difficulty === 'Medium' ? 2 : 3), 0);
-    const lcPoints = leetCodeProgress.easySolved + leetCodeProgress.mediumSolved * 2 + leetCodeProgress.hardSolved * 3;
-    const codingScore = Math.min(((codingPoints + lcPoints) / 100) * 100, 100);
-    const totalAttempted = aptitudeTopics.reduce((acc, t) => acc + t.attempted, 0);
-    const totalCorrect = aptitudeTopics.reduce((acc, t) => acc + t.correct, 0);
-    const aptitudeScore = totalAttempted > 0 ? (totalCorrect / totalAttempted) * 100 : 0;
-    const csTasks = trackedTasks.filter(t => t.status === 'Completed' && t.category === 'CS Fundamentals');
-    const csScore = Math.min(csTasks.length * 8, 100);
-    const consistencyScore = Math.min(streak.current * 10, 100);
-    const interviewTasks = trackedTasks.filter(t => t.status === 'Completed' && t.category === 'Interview');
-    const interviewScore = Math.min(interviewTasks.length * 10, 100);
-    return Math.round(codingScore * 0.4 + aptitudeScore * 0.2 + csScore * 0.2 + consistencyScore * 0.1 + interviewScore * 0.1);
-  }, [trackedTasks, leetCodeProgress, aptitudeTopics, streak]);
-
-  const taskStats = useMemo(() => {
-    const total = trackedTasks.length;
-    const completed = trackedTasks.filter(t => t.status === 'Completed').length;
-    return { total, completed };
-  }, [trackedTasks]);
+function MetricCard({
+  title,
+  value,
+  detail,
+  icon: Icon,
+  tone = 'primary',
+}: {
+  title: string;
+  value: string;
+  detail: string;
+  icon: LucideIcon;
+  tone?: 'primary' | 'success' | 'warning' | 'muted';
+}) {
+  const toneClass = {
+    primary: 'bg-primary/10 text-primary',
+    success: 'bg-success/10 text-success',
+    warning: 'bg-warning/10 text-warning',
+    muted: 'bg-muted text-muted-foreground',
+  }[tone];
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8">
-      <header className="px-4 pt-6 pb-4 safe-top">
-        <div className="flex items-center justify-between mb-4">
+    <Card className="border-border/70 bg-card/75 shadow-sm">
+      <CardContent className="p-4 sm:p-5">
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-xs font-medium text-muted-foreground">{title}</p>
+          <div className={cn('flex h-8 w-8 items-center justify-center rounded-lg', toneClass)}>
+            <Icon className="h-4 w-4" />
+          </div>
+        </div>
+        <p className="font-mono text-2xl font-semibold tracking-tight">{value}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function TaskRow({
+  task,
+  onComplete,
+}: {
+  task: TrackedTask;
+  onComplete: (id: string) => void;
+}) {
+  const difficultyClass = {
+    Easy: 'text-success',
+    Medium: 'text-warning',
+    Hard: 'text-destructive',
+  }[task.difficulty];
+
+  return (
+    <div className="group flex items-center gap-3 py-3">
+      <Checkbox
+        checked={false}
+        onCheckedChange={() => onComplete(task.id)}
+        aria-label={`Complete ${task.name}`}
+        className="h-5 w-5 rounded-md"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{task.name}</p>
+        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+          <span>{task.category}</span>
+          <span aria-hidden="true">·</span>
+          <span className={difficultyClass}>{task.difficulty}</span>
+        </div>
+      </div>
+      <Badge variant="secondary" className="hidden font-normal text-muted-foreground sm:inline-flex">
+        {task.source}
+      </Badge>
+      <ChevronRight className="h-4 w-4 text-muted-foreground/50 transition-transform group-hover:translate-x-0.5 group-hover:text-muted-foreground" />
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const {
+    habits,
+    dsaTopics,
+    studySessions,
+    trackedTasks,
+    leetCodeProgress,
+    dailyActivities,
+    aptitudeTopics,
+    applications,
+    profile,
+    toggleTaskStatus,
+  } = useStore();
+  const { user } = useFirebaseAuth();
+
+  const today = getTodayString();
+  const firstName = user?.displayName?.split(' ')[0] || profile.name?.split(' ')[0] || 'there';
+  const todayStudySeconds = studySessions
+    .filter((session) => session.date === today)
+    .reduce((total, session) => total + session.duration, 0);
+  const codingSolved = dsaTopics.reduce((total, topic) => total + topic.questionsSolved, 0);
+  const masteredTopics = dsaTopics.filter((topic) => topic.status === 'mastered').length;
+  const pendingTasks = trackedTasks.filter((task) => task.status === 'Pending');
+  const completedTasks = trackedTasks.filter((task) => task.status === 'Completed');
+  const completedToday = completedTasks.filter((task) => task.completionDate === today).length;
+  const goodHabits = habits.filter((habit) => habit.type === 'good');
+  const habitsDoneToday = goodHabits.filter((habit) => habit.completedDates.includes(today)).length;
+  const streak = useMemo(() => calculateStreak(dailyActivities), [dailyActivities]);
+  const activeApplications = applications.filter(
+    (application) => application.result === 'pending',
+  );
+
+  const weeklyActivity = useMemo(() => {
+    return Array.from({ length: 7 }, (_, index) => {
+      const date = new Date();
+      date.setHours(12, 0, 0, 0);
+      date.setDate(date.getDate() - (6 - index));
+      const key = toDateKey(date);
+      const focusMinutes = Math.round(
+        studySessions
+          .filter((session) => session.date === key)
+          .reduce((total, session) => total + session.duration, 0) / 60,
+      );
+      const tasks = trackedTasks.filter(
+        (task) => task.status === 'Completed' && task.completionDate === key,
+      ).length;
+
+      return {
+        day: date.toLocaleDateString('en-IN', { weekday: 'short' }),
+        date: key,
+        focusMinutes,
+        tasks,
+      };
+    });
+  }, [studySessions, trackedTasks]);
+
+  const weekFocusSeconds = weeklyActivity.reduce(
+    (total, day) => total + day.focusMinutes * 60,
+    0,
+  );
+
+  const readiness = useMemo(() => {
+    const leetCodeTotal =
+      leetCodeProgress.easySolved +
+      leetCodeProgress.mediumSolved +
+      leetCodeProgress.hardSolved;
+    const leetCodeTarget = Math.max(leetCodeProgress.target, 1);
+    const roadmapCoverage = dsaTopics.length > 0 ? masteredTopics / dsaTopics.length : 0;
+    const coding = clampScore(
+      (leetCodeTotal / leetCodeTarget) * 55 + roadmapCoverage * 45,
+    );
+
+    const aptitudeAttempted = aptitudeTopics.reduce((total, topic) => total + topic.attempted, 0);
+    const aptitudeCorrect = aptitudeTopics.reduce((total, topic) => total + topic.correct, 0);
+    const aptitudeAccuracy = aptitudeAttempted > 0 ? aptitudeCorrect / aptitudeAttempted : 0;
+    const aptitude = clampScore(
+      aptitudeAccuracy * 70 + Math.min(aptitudeAttempted / 100, 1) * 30,
+    );
+
+    const csCompleted = completedTasks.filter(
+      (task) => task.category === 'CS Fundamentals',
+    ).length;
+    const cs = clampScore(Math.min(csCompleted / 12, 1) * 100);
+
+    const interviewCompleted = completedTasks.filter(
+      (task) => task.category === 'Interview',
+    ).length;
+    const interviewStageCount = applications.filter(
+      (application) => application.status === 'interview',
+    ).length;
+    const interview = clampScore(
+      Math.min(interviewCompleted / 8, 1) * 70 + Math.min(interviewStageCount / 3, 1) * 30,
+    );
+
+    const consistency = clampScore(
+      Math.min(streak.current / 14, 1) * 70 +
+      Math.min(weeklyActivity.filter((day) => day.focusMinutes > 0).length / 7, 1) * 30,
+    );
+
+    const overall = clampScore(
+      coding * 0.4 +
+      aptitude * 0.15 +
+      cs * 0.2 +
+      interview * 0.15 +
+      consistency * 0.1,
+    );
+
+    return {
+      overall,
+      areas: [
+        { label: 'Coding & DSA', value: coding },
+        { label: 'Core CS', value: cs },
+        { label: 'Aptitude', value: aptitude },
+        { label: 'Interviews', value: interview },
+        { label: 'Consistency', value: consistency },
+      ],
+    };
+  }, [
+    aptitudeTopics,
+    applications,
+    completedTasks,
+    dsaTopics.length,
+    leetCodeProgress,
+    masteredTopics,
+    streak,
+    weeklyActivity,
+  ]);
+
+  const weakestTopic = useMemo(() => {
+    return [...dsaTopics]
+      .filter((topic) => topic.status !== 'mastered')
+      .sort((a, b) => a.confidence - b.confidence)[0];
+  }, [dsaTopics]);
+
+  const nextInterview = useMemo(() => {
+    return [...applications]
+      .filter(
+        (application) =>
+          application.interviewDate &&
+          application.interviewDate >= today &&
+          application.result === 'pending',
+      )
+      .sort((a, b) => (a.interviewDate || '').localeCompare(b.interviewDate || ''))[0];
+  }, [applications, today]);
+
+  const todayFocusPercent = clampScore((todayStudySeconds / STUDY_GOAL_SECONDS) * 100);
+  const todayPlanTotal = pendingTasks.length + completedToday;
+  const todayPlanPercent = todayPlanTotal > 0
+    ? clampScore((completedToday / todayPlanTotal) * 100)
+    : 0;
+
+  return (
+    <div className="dashboard-canvas min-h-full pb-24 md:pb-10">
+      <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-5 sm:px-6 sm:py-7 xl:px-8">
+        <motion.section
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+          className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end"
+        >
           <div>
-            <p className="text-muted-foreground text-sm">Good morning,</p>
-            <h1 className="text-2xl font-bold">{userName} 👋</h1>
-          </div>
-          <Link to="/profile"
-            className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-primary-foreground font-bold overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all">
-            {user?.photoURL ? (
-              <img src={user.photoURL} alt={userName} className="w-full h-full object-cover" />
-            ) : (
-              userName.charAt(0)
-            )}
-          </Link>
-        </div>
-        <div className="glass-card rounded-2xl p-4 border border-border">
-          <p className="text-sm italic text-foreground">"{quote.text}"</p>
-          <p className="text-xs text-muted-foreground mt-2">— {quote.author}</p>
-        </div>
-      </header>
-
-      <main className="px-4 space-y-6">
-        {/* Readiness Score + Today's Progress */}
-        <section className="flex flex-col items-center py-4">
-          <ProgressRing progress={readinessScore} size={160} strokeWidth={12}>
-            <div className="text-center">
-              <motion.p className="text-3xl font-bold"
-                key={readinessScore}
-                initial={{ scale: 1.2 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring' }}
-              >
-                {readinessScore}%
-              </motion.p>
-              <p className="text-xs text-muted-foreground">Placement Ready</p>
+            <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <CalendarClock className="h-3.5 w-3.5" />
+              {new Date().toLocaleDateString('en-IN', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })}
             </div>
-          </ProgressRing>
-          <p className="text-sm text-muted-foreground mt-3">
-            {completedToday} of {goodHabits.length} habits completed
-          </p>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              {getGreeting()}, {firstName}.
+            </h1>
+            <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
+              Here’s your placement pulse. Pick the highest-leverage task and keep the streak alive.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="h-9 gap-2 rounded-lg border-border/70 bg-card/70 px-3 font-normal">
+              <Flame className="h-4 w-4 text-warning" />
+              <span className="font-mono font-semibold text-foreground">{streak.current}</span>
+              day streak
+            </Badge>
+            <Button asChild className="h-9">
+              <Link to="/timer">
+                <Play className="h-4 w-4 fill-current" />
+                Start focus session
+              </Link>
+            </Button>
+          </div>
+        </motion.section>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Progress overview">
+          <MetricCard
+            title="Focus today"
+            value={formatDuration(todayStudySeconds)}
+            detail={`${todayFocusPercent}% of your 2 hour target`}
+            icon={Clock3}
+          />
+          <MetricCard
+            title="Problems solved"
+            value={codingSolved.toLocaleString('en-IN')}
+            detail={`${masteredTopics} of ${dsaTopics.length} topics mastered`}
+            icon={Code2}
+            tone="success"
+          />
+          <MetricCard
+            title="Tasks completed"
+            value={completedToday.toString()}
+            detail={pendingTasks.length > 0 ? `${pendingTasks.length} still in your queue` : 'Your queue is clear'}
+            icon={BookOpenCheck}
+            tone="warning"
+          />
+          <MetricCard
+            title="Active applications"
+            value={activeApplications.length.toString()}
+            detail={nextInterview ? `Next: ${nextInterview.company} interview` : 'Keep your pipeline current'}
+            icon={BriefcaseBusiness}
+            tone="muted"
+          />
         </section>
 
-        {/* Stats Grid */}
-        <section className="grid grid-cols-2 gap-3">
-          <StatCard title="Study Today" value={`${todayStudyHours}h ${todayStudyMins}m`} subtitle="Keep going!" icon={<Clock className="w-5 h-5" />} />
-          <StatCard title="Streak" value={`${streak.current} days`} subtitle={`Best: ${streak.longest}`} icon={<Flame className="w-5 h-5" />} variant="success" />
-          <StatCard title="Tasks Done" value={`${taskStats.completed}/${taskStats.total}`} subtitle="Total tasks" icon={<ListChecks className="w-5 h-5" />} />
-          <StatCard title="Readiness" value={`${readinessScore}%`} subtitle="Placement score" icon={<Zap className="w-5 h-5" />} variant="primary" />
-        </section>
-
-        {/* DSA Progress */}
-        <section className="bg-card border border-border rounded-2xl p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold flex items-center gap-2">
-              <Code2 className="w-5 h-5 text-primary" />
-              DSA Progress
-            </h2>
-            <span className="text-sm text-muted-foreground">{masteredTopics}/{dsaTopics.length} topics</span>
-          </div>
-          <div className="h-3 bg-muted rounded-full overflow-hidden mb-3">
-            <div className="h-full gradient-primary rounded-full transition-all duration-500" style={{ width: `${dsaProgress}%` }} />
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-success" />
-                <span className="text-muted-foreground">{masteredTopics} Mastered</span>
+        <section className="grid gap-6 xl:grid-cols-12">
+          <Card className="readiness-card overflow-hidden border-border/70 shadow-sm xl:col-span-8">
+            <CardContent className="relative grid gap-8 p-5 sm:p-7 lg:grid-cols-[220px_1fr] lg:items-center">
+              <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+                <div className="relative">
+                  <ProgressRing progress={readiness.overall} size={176} strokeWidth={10}>
+                    <div className="text-center">
+                      <p className="font-mono text-4xl font-semibold tracking-tight">
+                        {readiness.overall}
+                      </p>
+                      <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                        Readiness
+                      </p>
+                    </div>
+                  </ProgressRing>
+                  <div className="absolute -right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full border border-primary/25 bg-background text-primary shadow-sm">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full bg-warning" />
-                <span className="text-muted-foreground">{inProgressTopics} In Progress</span>
+
+              <div>
+                <div className="mb-6">
+                  <Badge variant="secondary" className="mb-3 gap-1.5 bg-primary/10 text-primary">
+                    <Sparkles className="h-3 w-3" />
+                    Placement readiness
+                  </Badge>
+                  <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                    {readiness.overall >= 75
+                      ? 'You’re entering interview-ready territory.'
+                      : readiness.overall >= 45
+                        ? 'Your preparation engine is building momentum.'
+                        : 'Your strongest gains are still ahead.'}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                    This score combines coding, core CS, aptitude, interview work, and consistency from your actual PrepTrack activity.
+                  </p>
+                </div>
+
+                <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                  {readiness.areas.map((area) => (
+                    <div key={area.label}>
+                      <div className="mb-1.5 flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{area.label}</span>
+                        <span className="font-mono font-medium">{area.value}%</span>
+                      </div>
+                      <Progress value={area.value} className="h-1.5 bg-muted/80" />
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-            <span className="font-medium text-primary">{totalQuestionsSolved} solved</span>
-          </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/70 bg-card/75 shadow-sm xl:col-span-4">
+            <CardHeader className="flex-row items-center justify-between space-y-0 p-5 pb-3">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Today’s execution</p>
+                <CardTitle className="mt-1 text-lg">Daily operating plan</CardTitle>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Target className="h-5 w-5" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-5 p-5 pt-2">
+              <div>
+                <div className="mb-2 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Plan completion</span>
+                  <span className="font-mono font-medium">{todayPlanPercent}%</span>
+                </div>
+                <Progress value={todayPlanPercent} className="h-2" />
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-border rounded-xl border border-border/70 bg-muted/30 py-3 text-center">
+                <div>
+                  <p className="font-mono text-lg font-semibold">{completedToday}</p>
+                  <p className="text-[10px] text-muted-foreground">Done</p>
+                </div>
+                <div>
+                  <p className="font-mono text-lg font-semibold">{pendingTasks.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Queued</p>
+                </div>
+                <div>
+                  <p className="font-mono text-lg font-semibold">{habitsDoneToday}/{goodHabits.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Habits</p>
+                </div>
+              </div>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link to="/daily-plan">
+                  Open today’s plan
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
         </section>
 
-        {/* Quick Actions */}
-        <section className="grid grid-cols-2 gap-3">
-          <Link to="/tasks" className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/50 transition-colors">
-            <div className="p-2 rounded-xl gradient-primary"><ListChecks className="w-5 h-5 text-primary-foreground" /></div>
-            <div><p className="font-medium text-sm">Tasks</p><p className="text-xs text-muted-foreground">Track tasks</p></div>
-          </Link>
-          <Link to="/leetcode" className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/50 transition-colors">
-            <div className="p-2 rounded-xl gradient-success"><Terminal className="w-5 h-5 text-success-foreground" /></div>
-            <div><p className="font-medium text-sm">LeetCode</p><p className="text-xs text-muted-foreground">Track progress</p></div>
-          </Link>
-          <Link to="/company-readiness" className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/50 transition-colors">
-            <div className="p-2 rounded-xl bg-warning/20"><Building2 className="w-5 h-5 text-warning" /></div>
-            <div><p className="font-medium text-sm">Companies</p><p className="text-xs text-muted-foreground">Readiness</p></div>
-          </Link>
-          <Link to="/timer" className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/50 transition-colors">
-            <div className="p-2 rounded-xl bg-destructive/20"><Clock className="w-5 h-5 text-destructive" /></div>
-            <div><p className="font-medium text-sm">Timer</p><p className="text-xs text-muted-foreground">Study time</p></div>
-          </Link>
+        <section className="grid gap-6 xl:grid-cols-12">
+          <Card className="border-border/70 bg-card/75 shadow-sm xl:col-span-7">
+            <CardHeader className="flex-row items-start justify-between space-y-0 p-5 pb-2 sm:p-6 sm:pb-2">
+              <div>
+                <CardTitle className="text-base">Focus queue</CardTitle>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Finish what matters before adding more.
+                </p>
+              </div>
+              <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
+                <Link to="/tasks">View all <ArrowRight className="h-3.5 w-3.5" /></Link>
+              </Button>
+            </CardHeader>
+            <CardContent className="px-5 pb-4 sm:px-6">
+              {pendingTasks.length > 0 ? (
+                <div className="divide-y divide-border/70">
+                  {pendingTasks.slice(0, 4).map((task) => (
+                    <TaskRow key={task.id} task={task} onComplete={toggleTaskStatus} />
+                  ))}
+                </div>
+              ) : (
+                <div className="my-4 flex flex-col items-center rounded-xl border border-dashed border-border bg-muted/25 px-5 py-8 text-center">
+                  <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-success/10 text-success">
+                    <Check className="h-5 w-5" />
+                  </div>
+                  <p className="text-sm font-medium">Your task queue is clear</p>
+                  <p className="mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
+                    Plan the next focused block so tomorrow starts with a decision already made.
+                  </p>
+                  <Button asChild size="sm" variant="outline" className="mt-4">
+                    <Link to="/tasks">Add a focused task</Link>
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/70 bg-card/75 shadow-sm xl:col-span-5">
+            <CardHeader className="flex-row items-start justify-between space-y-0 p-5 pb-0 sm:p-6 sm:pb-0">
+              <div>
+                <CardTitle className="text-base">Weekly momentum</CardTitle>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatDuration(weekFocusSeconds)} of focused study this week
+                </p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <BarChart3 className="h-4 w-4" />
+              </div>
+            </CardHeader>
+            <CardContent className="h-64 p-3 pt-6 sm:px-5">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={weeklyActivity} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="focusGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.32} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.01} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 6" />
+                  <XAxis
+                    dataKey="day"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                    dy={8}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: 'hsl(var(--primary))', strokeOpacity: 0.2 }}
+                    contentStyle={{
+                      background: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '10px',
+                      boxShadow: 'var(--shadow-md)',
+                      color: 'hsl(var(--popover-foreground))',
+                      fontSize: '12px',
+                    }}
+                    formatter={(value: number) => [`${value} min`, 'Focus time']}
+                    labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="focusMinutes"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2.5}
+                    fill="url(#focusGradient)"
+                    activeDot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 0 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </section>
-      </main>
+
+        <section className="grid gap-6 lg:grid-cols-3">
+          <Card className="border-border/70 bg-card/75 shadow-sm">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <CircleDot className="h-5 w-5" />
+                </div>
+                <Badge variant="outline" className="font-mono font-normal">
+                  {weakestTopic ? `${weakestTopic.confidence}% confidence` : 'Roadmap ready'}
+                </Badge>
+              </div>
+              <p className="mt-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Recommended next
+              </p>
+              <h3 className="mt-2 text-lg font-semibold">
+                {weakestTopic ? `Strengthen ${weakestTopic.name}` : 'Choose your next DSA topic'}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {weakestTopic
+                  ? 'This is currently your lowest-confidence active topic—the best place for a focused revision block.'
+                  : 'Your roadmap is ready. Pick a pattern and begin with one deliberate practice session.'}
+              </p>
+              <Button asChild variant="link" className="mt-3 h-auto p-0">
+                <Link to="/dsa">Open DSA roadmap <ArrowRight className="h-4 w-4" /></Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/70 bg-card/75 shadow-sm">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-warning/10 text-warning">
+                  <CalendarClock className="h-5 w-5" />
+                </div>
+                <Badge variant="secondary" className="font-normal">
+                  {nextInterview ? 'Upcoming' : `${activeApplications.length} active`}
+                </Badge>
+              </div>
+              <p className="mt-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Placement pipeline
+              </p>
+              <h3 className="mt-2 text-lg font-semibold">
+                {nextInterview ? `${nextInterview.company} · ${nextInterview.role}` : 'Keep your pipeline moving'}
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {nextInterview?.interviewDate
+                  ? `Interview on ${new Date(`${nextInterview.interviewDate}T12:00:00`).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}. Review the role and rehearse your strongest stories.`
+                  : 'Track every application, assessment, follow-up, and outcome in one reliable timeline.'}
+              </p>
+              <Button asChild variant="link" className="mt-3 h-auto p-0">
+                <Link to="/placements">Open placement tracker <ArrowRight className="h-4 w-4" /></Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/70 bg-card/75 shadow-sm">
+            <CardContent className="p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/10 text-success">
+                  <Trophy className="h-5 w-5" />
+                </div>
+                <Badge variant="secondary" className="font-normal">AI guided</Badge>
+              </div>
+              <p className="mt-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                Interview gym
+              </p>
+              <h3 className="mt-2 text-lg font-semibold">Practice before it counts</h3>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Run a timed mock, sharpen your reasoning, and turn feedback into the next practice loop.
+              </p>
+              <Button asChild variant="link" className="mt-3 h-auto p-0">
+                <Link to="/mock-interview">Start a mock interview <ArrowRight className="h-4 w-4" /></Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+
+        <Separator className="opacity-60" />
+
+        <footer className="flex flex-col justify-between gap-2 pb-2 text-xs text-muted-foreground sm:flex-row sm:items-center">
+          <p>PrepTrack turns daily effort into placement readiness.</p>
+          <div className="flex items-center gap-4">
+            <Link to="/analytics" className="transition-colors hover:text-foreground">View analytics</Link>
+            <Link to="/reflect" className="transition-colors hover:text-foreground">Reflect on today</Link>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
