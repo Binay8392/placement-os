@@ -16,6 +16,7 @@ import {
   ListChecks,
   Mic2,
   Sparkles,
+  Swords,
   Terminal,
   Timer,
   UserRound,
@@ -51,6 +52,7 @@ export const NAVIGATION_SECTIONS: ProductNavSection[] = [
     items: [
       { to: '/dsa', label: 'DSA roadmap', description: 'Master every core pattern', icon: Code2 },
       { to: '/leetcode', label: 'Coding tracker', description: 'Track coding problem progress', icon: Terminal },
+      { to: '/code-war-room', label: 'Code War Room', shortLabel: 'War Room', description: 'Practice hardcoded coding battles', icon: Swords },
       { to: '/aptitude', label: 'Aptitude', description: 'Quant, logic, and verbal practice', icon: BookOpen },
       { to: '/timer', label: 'Focus timer', description: 'Log deep work sessions', icon: Timer },
       { to: '/habits', label: 'Habits', description: 'Build placement-ready consistency', icon: CheckCircle2 },

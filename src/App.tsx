@@ -25,6 +25,7 @@ const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const FirebaseAuthPage = lazy(() => import("@/pages/FirebaseAuthPage"));
 const TaskTrackerPage = lazy(() => import("@/pages/TaskTrackerPage"));
 const LeetCodePage = lazy(() => import("@/pages/LeetCodePage"));
+const CodeWarRoomPage = lazy(() => import("@/pages/CodeWarRoomPage"));
 const CompanyReadinessPage = lazy(() => import("@/pages/CompanyReadinessPage"));
 const CompanyTaskGeneratorPage = lazy(() => import("@/pages/CompanyTaskGeneratorPage"));
 const CompanyDashboardPage = lazy(() => import("@/pages/CompanyDashboardPage"));
@@ -75,6 +76,7 @@ function AppContent() {
           <Route path="/profile" element={<FirebaseProtectedRoute><ProfilePage /></FirebaseProtectedRoute>} />
           <Route path="/tasks" element={<FirebaseProtectedRoute><TaskTrackerPage /></FirebaseProtectedRoute>} />
           <Route path="/leetcode" element={<FirebaseProtectedRoute><LeetCodePage /></FirebaseProtectedRoute>} />
+          <Route path="/code-war-room" element={<FirebaseProtectedRoute><CodeWarRoomPage /></FirebaseProtectedRoute>} />
           <Route path="/company-readiness" element={<FirebaseProtectedRoute><CompanyReadinessPage /></FirebaseProtectedRoute>} />
           <Route path="/company-tasks" element={<FirebaseProtectedRoute><CompanyTaskGeneratorPage /></FirebaseProtectedRoute>} />
           <Route path="/company/:companyId" element={<FirebaseProtectedRoute><CompanyDashboardPage /></FirebaseProtectedRoute>} />
