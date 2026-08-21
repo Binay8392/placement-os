@@ -39,7 +39,7 @@ function checkBrowser() {
 export default function GameArenaAssessmentPage() {
   const navigate = useNavigate();
   const online = useNetworkStatus();
-  const [profile, setProfile] = useState(mockProfiles[1].id);
+  const [profile, setProfile] = useState<string>(mockProfiles[1].id);
   const [config] = useState(() => getArenaConfig());
   const activeSession = useMemo(() => getActiveSession(), []);
   const checks = [

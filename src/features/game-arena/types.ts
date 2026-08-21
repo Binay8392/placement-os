@@ -185,4 +185,5 @@ export interface ArenaStats {
   totalXp: number;
 }
 
-export type QuestionGenerator = (difficulty: Difficulty, seed: string) => GameQuestion;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type QuestionGenerator = (difficulty: Difficulty, seed: string) => GameQuestion<any>;

@@ -11,6 +11,7 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { defaultAssessmentConfig, mockProfiles } from '@/features/game-arena/config';

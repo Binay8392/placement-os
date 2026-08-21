@@ -547,7 +547,7 @@ async function executeCase(
         expected: testCase.output,
         actual: 'Runtime error',
         durationMs: payload.durationMs || Math.round(performance.now() - started),
-        error: payload.error,
+        error: (payload as WorkerErrorPayload).error,
         logs: payload.logs,
       };
     }
