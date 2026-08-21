@@ -35,6 +35,11 @@ const ResumeBuilderPage = lazy(() => import("@/pages/ResumeBuilderPage"));
 const MockInterviewPage = lazy(() => import("@/pages/MockInterviewPage"));
 const AIChatPage = lazy(() => import("@/pages/AIChatPage"));
 const SupportUsPage = lazy(() => import("@/pages/SupportUsPage"));
+const GameArenaPage = lazy(() => import("@/pages/GameArenaPage"));
+const GameArenaPlayPage = lazy(() => import("@/pages/GameArenaPlayPage"));
+const GameArenaAssessmentPage = lazy(() => import("@/pages/GameArenaAssessmentPage"));
+const GameArenaAssessmentRunPage = lazy(() => import("@/pages/GameArenaAssessmentRunPage"));
+const GameArenaResultsPage = lazy(() => import("@/pages/GameArenaResultsPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -86,6 +91,11 @@ function AppContent() {
           <Route path="/mock-interview" element={<FirebaseProtectedRoute><MockInterviewPage /></FirebaseProtectedRoute>} />
           <Route path="/ai-chat" element={<FirebaseProtectedRoute><AIChatPage /></FirebaseProtectedRoute>} />
           <Route path="/support-us" element={<FirebaseProtectedRoute><SupportUsPage /></FirebaseProtectedRoute>} />
+          <Route path="/game-arena" element={<FirebaseProtectedRoute><GameArenaPage /></FirebaseProtectedRoute>} />
+          <Route path="/game-arena/assessment" element={<FirebaseProtectedRoute><GameArenaAssessmentPage /></FirebaseProtectedRoute>} />
+          <Route path="/game-arena/assessment/run" element={<FirebaseProtectedRoute><GameArenaAssessmentRunPage /></FirebaseProtectedRoute>} />
+          <Route path="/game-arena/results/:sessionId" element={<FirebaseProtectedRoute><GameArenaResultsPage /></FirebaseProtectedRoute>} />
+          <Route path="/game-arena/:gameId" element={<FirebaseProtectedRoute><GameArenaPlayPage /></FirebaseProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
