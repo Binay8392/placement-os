@@ -12,7 +12,8 @@ import {
   sendPasswordResetEmail,
   updatePassword,
   signOut as firebaseSignOut,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
@@ -26,6 +27,9 @@ interface AuthContextType {
   setupRecaptcha: (containerId: string, existingVerifier?: RecaptchaVerifier | null) => RecaptchaVerifier;
   verifyPhoneOTP: (confirmationResult: ConfirmationResult, otp: string) => Promise<{ error: Error | null }>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  sendVerificationEmail: () => Promise<{ error: Error | null }>;
+  reloadUser: () => Promise<boolean>;
+  needsEmailVerification: boolean;
   updateUserPassword: (newPassword: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -48,6 +52,11 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, name?: string) => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
+      try {
+        await sendEmailVerification(result.user);
+      } catch {
+        // surfaced later via resend button
+      }
       if (name && result.user) {
         await updateProfile(result.user, { displayName: name });
         // Refresh the user state to include the updated displayName
@@ -141,6 +150,30 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const sendVerificationEmail = async () => {
+    try {
+      if (!auth.currentUser) throw new Error('No signed-in user.');
+      if (auth.currentUser.emailVerified) throw new Error('Your email is already verified.');
+      await sendEmailVerification(auth.currentUser);
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const reloadUser = async () => {
+    if (!auth.currentUser) return false;
+    await auth.currentUser.reload();
+    const refreshed = auth.currentUser;
+    setUser(refreshed ? Object.assign(Object.create(Object.getPrototypeOf(refreshed)), refreshed) : null);
+    return !!refreshed?.emailVerified;
+  };
+
+  const needsEmailVerification = !!user
+    && !user.emailVerified
+    && user.providerData.length > 0
+    && user.providerData.every((p) => p.providerId === 'password');
+
   const signOut = async () => {
     await firebaseSignOut(auth);
   };
@@ -155,6 +188,10 @@ export function FirebaseAuthProvider({ children }: { children: ReactNode }) {
       sendPhoneOTP,
       verifyPhoneOTP,
       resetPassword, 
+      sendVerificationEmail,
+      reloadUser,
+      needsEmailVerification,
+
       updateUserPassword, 
       signOut,
       setupRecaptcha
