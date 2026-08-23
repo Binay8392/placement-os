@@ -23,6 +23,7 @@ const CalendarPage = lazy(() => import("@/pages/CalendarPage"));
 const ReflectPage = lazy(() => import("@/pages/ReflectPage"));
 const ProfilePage = lazy(() => import("@/pages/ProfilePage"));
 const FirebaseAuthPage = lazy(() => import("@/pages/FirebaseAuthPage"));
+const VerifyEmailPage = lazy(() => import("@/pages/VerifyEmailPage"));
 const TaskTrackerPage = lazy(() => import("@/pages/TaskTrackerPage"));
 const LeetCodePage = lazy(() => import("@/pages/LeetCodePage"));
 const CodeWarRoomPage = lazy(() => import("@/pages/CodeWarRoomPage"));
@@ -69,6 +70,7 @@ function AppContent() {
       <Suspense fallback={<RouteLoading />}>
         <Routes>
           <Route path="/auth" element={<FirebaseAuthPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/" element={<FirebaseProtectedRoute><Dashboard /></FirebaseProtectedRoute>} />
           <Route path="/timer" element={<FirebaseProtectedRoute><StudyTimer /></FirebaseProtectedRoute>} />
           <Route path="/habits" element={<FirebaseProtectedRoute><HabitsPage /></FirebaseProtectedRoute>} />

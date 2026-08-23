@@ -13,12 +13,13 @@ import { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Logo } from '@/components/Logo';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getFirebaseErrorMessage } from '@/lib/firebaseErrors';
 
 type AuthView = 'main' | 'forgot' | 'phone-otp';
 
 export default function FirebaseAuthPage() {
   const navigate = useNavigate();
-  const { user, loading, signUp, signIn, signInWithGoogle, sendPhoneOTP, verifyPhoneOTP, resetPassword, setupRecaptcha } = useFirebaseAuth();
+  const { user, loading, signUp, signIn, signInWithGoogle, sendPhoneOTP, verifyPhoneOTP, resetPassword, setupRecaptcha, needsEmailVerification } = useFirebaseAuth();
   const { updateProfile } = useStore();
   const { toast } = useToast();
 
@@ -36,9 +37,9 @@ export default function FirebaseAuthPage() {
 
   useEffect(() => {
     if (user && !loading) {
-      navigate('/');
+      navigate(needsEmailVerification ? '/verify-email' : '/', { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, needsEmailVerification, navigate]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +50,7 @@ export default function FirebaseAuthPage() {
     if (error) {
       toast({
         title: "Sign in failed",
-        description: error.message,
+        description: getFirebaseErrorMessage(error),
         variant: "destructive",
       });
     }
@@ -64,7 +65,7 @@ export default function FirebaseAuthPage() {
     if (error) {
       toast({
         title: "Sign up failed",
-        description: error.message,
+        description: getFirebaseErrorMessage(error),
         variant: "destructive",
       });
     } else {
@@ -77,8 +78,9 @@ export default function FirebaseAuthPage() {
       });
       toast({
         title: "Account created!",
-        description: "You're now signed in.",
+        description: "Check your email to verify your account.",
       });
+      navigate('/verify-email', { replace: true });
     }
   };
 
@@ -90,11 +92,12 @@ export default function FirebaseAuthPage() {
     if (error) {
       toast({
         title: "Google sign in failed",
-        description: error.message,
+        description: getFirebaseErrorMessage(error),
         variant: "destructive",
       });
     }
   };
+
 
   const handleSendPhoneOTP = async (e: React.FormEvent) => {
     e.preventDefault();
