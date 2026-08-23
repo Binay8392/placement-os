@@ -13,6 +13,7 @@ import { ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Logo } from '@/components/Logo';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getFirebaseErrorMessage } from '@/lib/firebaseErrors';
 
 type AuthView = 'main' | 'forgot' | 'phone-otp';
 
