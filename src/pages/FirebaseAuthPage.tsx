@@ -19,7 +19,7 @@ type AuthView = 'main' | 'forgot' | 'phone-otp';
 
 export default function FirebaseAuthPage() {
   const navigate = useNavigate();
-  const { user, loading, signUp, signIn, signInWithGoogle, sendPhoneOTP, verifyPhoneOTP, resetPassword, setupRecaptcha } = useFirebaseAuth();
+  const { user, loading, signUp, signIn, signInWithGoogle, sendPhoneOTP, verifyPhoneOTP, resetPassword, setupRecaptcha, needsEmailVerification } = useFirebaseAuth();
   const { updateProfile } = useStore();
   const { toast } = useToast();
 
@@ -37,9 +37,9 @@ export default function FirebaseAuthPage() {
 
   useEffect(() => {
     if (user && !loading) {
-      navigate('/');
+      navigate(needsEmailVerification ? '/verify-email' : '/', { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, needsEmailVerification, navigate]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
