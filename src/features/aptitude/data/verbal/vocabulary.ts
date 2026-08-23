@@ -1,0 +1,226 @@
+import type { AptitudeQuestion } from '../../types';
+
+const questions: AptitudeQuestion[] = [
+  // ─── EASY (4) ────────────────────────────────────────────────────────────────
+  {
+    id: 'verb-voc-001',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Word Meaning',
+    question: 'What is the meaning of the word "BENEVOLENT"?',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'Well-meaning and kindly' },
+      { id: 'b', text: 'Hostile and aggressive' },
+      { id: 'c', text: 'Lazy and indifferent' },
+      { id: 'd', text: 'Dishonest and cunning' },
+    ],
+    correctAnswer: 'a',
+    explanation:
+      '"Benevolent" means well-meaning and kindly. It comes from Latin "bene" (well) + "volens" (wishing). Example: "The benevolent donor funded the entire school library."',
+    concept: 'Bene- prefix means "good/well" (e.g., benefit, benign, benefactor).',
+    difficulty: 'easy',
+    estimatedTime: 30,
+    tags: ['vocabulary', 'word meaning', 'adjective'],
+    companyRelevance: ['TCS', 'Infosys', 'Wipro'],
+  },
+  {
+    id: 'verb-voc-002',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Word Meaning',
+    question: 'What does the word "LUCID" mean?',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'Dark and gloomy' },
+      { id: 'b', text: 'Clear and easy to understand' },
+      { id: 'c', text: 'Complicated and confusing' },
+      { id: 'd', text: 'Loud and noisy' },
+    ],
+    correctAnswer: 'b',
+    explanation:
+      '"Lucid" means clearly expressed and easy to understand. It can also mean mentally clear (e.g., "a lucid explanation," "lucid dreaming").',
+    difficulty: 'easy',
+    estimatedTime: 30,
+    tags: ['vocabulary', 'adjective', 'word meaning'],
+    companyRelevance: ['Accenture', 'TCS', 'Cognizant'],
+  },
+  {
+    id: 'verb-voc-003',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Fill in the Blank',
+    question:
+      'The professor\'s lecture was so ________ that even the first-year students could follow it without difficulty.',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'abstruse' },
+      { id: 'b', text: 'lucid' },
+      { id: 'c', text: 'verbose' },
+      { id: 'd', text: 'ambiguous' },
+    ],
+    correctAnswer: 'b',
+    explanation:
+      '"Lucid" means clear and easy to understand, which fits the context of even beginners being able to follow. "Abstruse" means difficult to understand; "verbose" means using too many words; "ambiguous" means open to more than one interpretation.',
+    difficulty: 'easy',
+    estimatedTime: 35,
+    tags: ['vocabulary', 'fill in the blank', 'context'],
+    companyRelevance: ['Wipro', 'HCL', 'TCS'],
+  },
+  {
+    id: 'verb-voc-004',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Correct Usage',
+    question: 'Choose the sentence in which the word "AMIABLE" is used correctly.',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'The amiable storm destroyed several coastal villages.' },
+      { id: 'b', text: 'She had an amiable disposition that made everyone feel welcome.' },
+      { id: 'c', text: 'The amiable contract was signed under duress.' },
+      { id: 'd', text: 'He wore an amiable coat to the formal event.' },
+    ],
+    correctAnswer: 'b',
+    explanation:
+      '"Amiable" means having a friendly and pleasant manner. It applies to people\'s personalities and dispositions, not to storms, contracts, or clothing. Option B is the only correct usage.',
+    difficulty: 'easy',
+    estimatedTime: 40,
+    tags: ['vocabulary', 'correct usage', 'adjective'],
+    companyRelevance: ['Infosys', 'Capgemini', 'Accenture'],
+  },
+
+  // ─── MEDIUM (4) ──────────────────────────────────────────────────────────────
+  {
+    id: 'verb-voc-005',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Word Meaning',
+    question: 'What is the meaning of the word "EQUIVOCAL"?',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'Clear and unambiguous' },
+      { id: 'b', text: 'Open to more than one interpretation; ambiguous' },
+      { id: 'c', text: 'Morally upright' },
+      { id: 'd', text: 'Enthusiastic and eager' },
+    ],
+    correctAnswer: 'b',
+    explanation:
+      '"Equivocal" means open to two or more interpretations and often intended to mislead. Example: "His equivocal answer left everyone confused." Root: Latin "aequus" (equal) + "vox" (voice) — having two equal voices/meanings.',
+    concept: 'Equivocal ≠ Unequivocal. "Unequivocal" means leaving no doubt.',
+    difficulty: 'medium',
+    estimatedTime: 40,
+    tags: ['vocabulary', 'word meaning', 'advanced'],
+    companyRelevance: ['TCS', 'Infosys', 'Wipro', 'HCL'],
+  },
+  {
+    id: 'verb-voc-006',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Fill in the Blank',
+    question:
+      'Despite the committee\'s repeated requests, the director remained ________ about his future plans for the organization.',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'forthright' },
+      { id: 'b', text: 'loquacious' },
+      { id: 'c', text: 'reticent' },
+      { id: 'd', text: 'vociferous' },
+    ],
+    correctAnswer: 'c',
+    explanation:
+      '"Reticent" means not revealing one\'s thoughts or feelings readily; reserved. This fits someone who refuses to share plans despite being asked. "Forthright" means direct/outspoken; "loquacious" means talkative; "vociferous" means loud and forceful.',
+    difficulty: 'medium',
+    estimatedTime: 45,
+    tags: ['vocabulary', 'fill in the blank', 'context'],
+    companyRelevance: ['Accenture', 'Cognizant', 'Wipro'],
+  },
+  {
+    id: 'verb-voc-007',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Correct Usage',
+    question: 'Which sentence uses the word "PRAGMATIC" correctly?',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'The pragmatic river flooded the nearby fields.' },
+      { id: 'b', text: 'She took a pragmatic approach, focusing on what could actually be achieved.' },
+      { id: 'c', text: 'The pragmatic sunset painted the sky in vivid colours.' },
+      { id: 'd', text: 'He expressed his pragmatic feelings openly.' },
+    ],
+    correctAnswer: 'b',
+    explanation:
+      '"Pragmatic" means dealing with things sensibly and realistically based on practical considerations rather than ideals. It applies to approaches, decisions, and people—not natural phenomena like rivers or sunsets.',
+    difficulty: 'medium',
+    estimatedTime: 40,
+    tags: ['vocabulary', 'correct usage', 'adjective'],
+    companyRelevance: ['TCS', 'Infosys', 'Deloitte'],
+  },
+  {
+    id: 'verb-voc-008',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Word Meaning',
+    question: 'The word "AMELIORATE" most nearly means:',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'To worsen or aggravate' },
+      { id: 'b', text: 'To make something bad better; to improve' },
+      { id: 'c', text: 'To eliminate completely' },
+      { id: 'd', text: 'To postpone indefinitely' },
+    ],
+    correctAnswer: 'b',
+    explanation:
+      '"Ameliorate" means to make something unpleasant or unsatisfactory better. Example: "New policies were introduced to ameliorate the working conditions in the factory." Its antonym is "exacerbate" (to make worse).',
+    difficulty: 'medium',
+    estimatedTime: 40,
+    tags: ['vocabulary', 'word meaning', 'verb'],
+    companyRelevance: ['Wipro', 'HCL', 'Accenture'],
+  },
+
+  // ─── HARD (2) ────────────────────────────────────────────────────────────────
+  {
+    id: 'verb-voc-009',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Fill in the Blank',
+    question:
+      'The scientist\'s theory was initially met with ________ by the academic community, but subsequent experiments provided compelling evidence in its favour.',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'approbation' },
+      { id: 'b', text: 'sycophancy' },
+      { id: 'c', text: 'opprobrium' },
+      { id: 'd', text: 'skepticism' },
+    ],
+    correctAnswer: 'd',
+    explanation:
+      '"Skepticism" (doubt/disbelief) fits because the community initially doubted the theory but was later convinced by experiments. "Approbation" means approval (contradicts "but"); "opprobrium" means harsh criticism (too extreme—experiments wouldn\'t just overcome harsh moral condemnation); "sycophancy" means excessive flattery (irrelevant).',
+    difficulty: 'hard',
+    estimatedTime: 60,
+    tags: ['vocabulary', 'fill in the blank', 'advanced', 'context'],
+    companyRelevance: ['TCS', 'IBM', 'Microsoft'],
+  },
+  {
+    id: 'verb-voc-010',
+    section: 'verbal',
+    topic: 'Vocabulary',
+    subtopic: 'Word Meaning',
+    question: 'Which of the following best defines the word "PERSPICACIOUS"?',
+    type: 'mcq',
+    options: [
+      { id: 'a', text: 'Having a tendency to sweat excessively' },
+      { id: 'b', text: 'Having a ready insight into things; shrewd and perceptive' },
+      { id: 'c', text: 'Lacking confidence and self-assurance' },
+      { id: 'd', text: 'Being excessively cautious and hesitant' },
+    ],
+    correctAnswer: 'b',
+    explanation:
+      '"Perspicacious" means having a ready insight; showing a perceptive understanding. Example: "The perspicacious analyst predicted the market crash months in advance." It comes from Latin "perspicax" (sharp-sighted). Do not confuse with "perspicuous" (clearly expressed) or "perspire" (to sweat).',
+    difficulty: 'hard',
+    estimatedTime: 55,
+    tags: ['vocabulary', 'word meaning', 'advanced', 'adjective'],
+    companyRelevance: ['Infosys', 'Cognizant', 'Deloitte'],
+  },
+];
+
+export default questions;

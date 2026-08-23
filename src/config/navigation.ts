@@ -55,7 +55,7 @@ export const NAVIGATION_SECTIONS: ProductNavSection[] = [
       { to: '/leetcode', label: 'Coding tracker', description: 'Track coding problem progress', icon: Terminal },
       { to: '/code-war-room', label: 'Code War Room', shortLabel: 'War Room', description: 'Practice hardcoded coding battles', icon: Swords },
       { to: '/game-arena', label: 'Game Arena', shortLabel: 'Arena', description: 'Aptitude games and full simulations', icon: Gamepad2, matchPrefix: '/game-arena' },
-      { to: '/aptitude', label: 'Aptitude', description: 'Quant, logic, and verbal practice', icon: BookOpen },
+      { to: '/aptitude', label: 'Aptitude', description: 'Quant, logic, and verbal practice', icon: BookOpen, matchPrefix: '/aptitude' },
       { to: '/timer', label: 'Focus timer', description: 'Log deep work sessions', icon: Timer },
       { to: '/habits', label: 'Habits', description: 'Build placement-ready consistency', icon: CheckCircle2 },
     ],

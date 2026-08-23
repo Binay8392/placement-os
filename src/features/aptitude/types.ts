@@ -27,6 +27,8 @@ export interface AptitudeQuestion {
   options: AnswerOption[];
   correctAnswer: string;
   explanation: string;
+  shortcut?: string;
+  concept?: string;
   difficulty: Difficulty;
   estimatedTime: number;
   tags: string[];
