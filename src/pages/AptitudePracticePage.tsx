@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, ArrowRight, ChevronLeft, ChevronRight,
+  ArrowLeft, ChevronLeft, ChevronRight,
   Flag, RotateCcw, Send, BookOpen, Clock, Target
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ export default function AptitudePracticePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useFirebaseAuth();
-  const { saveAttempt, updateTopicAfterAttempt, addWrongAnswer, addBookmark, isBookmarked } = useAptitudeProgress(user?.uid);
+  const { saveAttempt, updateTopicAfterAttempt, addWrongAnswersBatch } = useAptitudeProgress(user?.uid);
   const { recordToday } = useAptitudeStreak(user?.uid);
   const { session, startSession, selectAnswer, clearAnswer, toggleMark, goNext, goPrev, goTo, submitSession, clearSession } = useAptitudeSession();
 
@@ -40,7 +40,6 @@ export default function AptitudePracticePage() {
   const [revealedQuestions, setRevealedQuestions] = useState<Set<string>>(new Set());
   const [showPalette, setShowPalette] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [currentAttemptId, setCurrentAttemptId] = useState<string | null>(null);
 
   // Config state
   const [count, setCount] = useState(parseInt(searchParams.get('count') ?? '10', 10));
@@ -93,7 +92,7 @@ export default function AptitudePracticePage() {
     if (!session) return;
     const q = session.questions[session.currentIndex];
     selectAnswer(q.id, optionId);
-    // In practice mode, reveal answer immediately
+    // In practice mode, reveal answer immediately in local state
     if (session.config.revealAnswers) {
       setRevealedQuestions((prev) => new Set(prev).add(q.id));
     }
@@ -104,32 +103,38 @@ export default function AptitudePracticePage() {
     setSubmitting(true);
     const attempt = submitSession();
     if (!attempt) { setSubmitting(false); return; }
-    // Save wrong answers
+
+    // Collect wrong answers
+    const wrongItems: { question: any; selected: string | null }[] = [];
     for (const ans of attempt.answers) {
       if (!ans.isCorrect && !ans.skipped) {
         const q = attempt.questions.find((qq) => qq.id === ans.questionId);
-        if (q) await addWrongAnswer(q, ans.selected);
+        if (q) wrongItems.push({ question: q, selected: ans.selected });
       }
     }
-    // Update topic progress
-    if (topicId) {
-      await updateTopicAfterAttempt(topicId, attempt.totalQuestions, attempt.correct, attempt.timeTaken);
+
+    // Launch background parallel non-blocking persistence
+    const bgTasks: Promise<any>[] = [];
+    if (wrongItems.length > 0) {
+      bgTasks.push(addWrongAnswersBatch(wrongItems));
     }
-    // Record practice today for streak
-    await recordToday();
-    // Save attempt
-    await saveAttempt(attempt);
-    setCurrentAttemptId(attempt.attemptId);
-    // Navigate to results
+    if (topicId) {
+      bgTasks.push(updateTopicAfterAttempt(topicId, attempt.totalQuestions, attempt.correct, attempt.timeTaken));
+    }
+    bgTasks.push(recordToday());
+    bgTasks.push(saveAttempt(attempt));
+
+    void Promise.allSettled(bgTasks).catch((err) => {
+      console.error('Background persistence error:', err);
+    });
+
+    // Navigate immediately to results (< 50ms transition)
     navigate(`/aptitude/results/${attempt.attemptId}`, { state: { attempt } });
-    setSubmitting(false);
-  }, [session, submitting, submitSession, addWrongAnswer, topicId, updateTopicAfterAttempt, recordToday, saveAttempt, navigate]);
+  }, [session, submitting, submitSession, addWrongAnswersBatch, topicId, updateTopicAfterAttempt, recordToday, saveAttempt, navigate]);
 
   if (!topic) {
     return <div className="min-h-screen flex items-center justify-center"><p className="text-muted-foreground">Topic not found.</p></div>;
   }
-
-  const config = SECTION_CONFIG[topic.section];
 
   // Config screen
   if (configMode) {
@@ -366,7 +371,7 @@ export default function AptitudePracticePage() {
               size="sm"
             >
               <Send className="h-4 w-4 mr-1" />
-              {submitting ? 'Saving...' : 'Submit'}
+              {submitting ? 'Submitting...' : 'Submit'}
             </Button>
           ) : (
             <Button size="sm" onClick={() => goNext()}>

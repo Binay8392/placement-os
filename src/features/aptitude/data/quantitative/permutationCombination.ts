@@ -200,10 +200,9 @@ const questions: AptitudeQuestion[] = [
       { id: 'c', text: '2016' },
       { id: 'd', text: '1944' },
     ],
-    correctAnswer: 'c',
-    explanation:
-      'The last digit must be even (0,2,4,6,8). Case 1: Last digit = 0. First digit: 9 choices (1-9), second: 8, third: 7. Count = 9×8×7 = 504. Case 2: Last digit = 2,4,6,8 (4 options). First digit: cannot be 0 or last digit = 8 choices, second: 8 choices, third: 7 choices. Count = 4×8×8×7 = 1792. Wait, let me be careful. If last digit ∈ {2,4,6,8}: First digit: cannot be 0 or the chosen last digit → 8 choices. Second digit: any of remaining 8 → 8. Third digit: any of remaining 7 → 7. Count = 4×8×8×7 = 1792. Total = 504 + 1792 = 2296. Hmm that gives 2296. Let me recheck Case 1: last=0, first=9 choices, second=8, third=7: 9×8×7=504. Case 2: last ∈ {2,4,6,8}: first can be anything except 0 and last digit, so 8 choices; second: 8 remaining; third: 7. 4×8×8×7=1792. Total=2296. Answer = a.',
     correctAnswer: 'a',
+    explanation:
+      'The last digit must be even (0,2,4,6,8). Case 1: Last digit = 0. First digit: 9 choices (1-9), second: 8, third: 7. Count = 9×8×7 = 504. Case 2: Last digit = 2,4,6,8 (4 options). First digit: cannot be 0 or last digit = 8 choices, second: 8 choices, third: 7 choices. Count = 4×8×8×7 = 1792. Wait, let me be careful. If last digit ∈ {2,4,6,8}: First digit: cannot be 0 or the chosen last digit → 8 choices. Second digit: any of remaining 8 → 8. Third digit: any of remaining 7 → 7. Count = 4×8×8×7 = 1792. Total = 504 + 1792 = 2296. Let me recheck Case 1: last=0, first=9 choices, second=8, third=7: 9×8×7=504. Case 2: last ∈ {2,4,6,8}: first can be anything except 0 and last digit, so 8 choices; second: 8 remaining; third: 7. 4×8×8×7=1792. Total=2296. Answer = a.',
     difficulty: 'hard',
     estimatedTime: 120,
     tags: ['permutation', '4-digit numbers', 'even numbers', 'without repetition'],

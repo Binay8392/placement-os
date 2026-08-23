@@ -12,6 +12,8 @@ import {
   limit,
   serverTimestamp,
   Timestamp,
+  writeBatch,
+  arrayUnion,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
 import type { AptitudeAttempt, QuestionSnapshot, TopicProgress } from '../types';
@@ -48,19 +50,7 @@ export async function upsertTopicProgress(
   updates: Partial<TopicProgress>
 ): Promise<void> {
   const ref = aptitudeProgressDoc(uid, topicId);
-  const snap = await getDoc(ref);
-  if (snap.exists()) {
-    await updateDoc(ref, updates as Record<string, unknown>);
-  } else {
-    await setDoc(ref, {
-      attempted: 0,
-      correct: 0,
-      totalTime: 0,
-      lastPracticed: null,
-      recent: [],
-      ...updates,
-    });
-  }
+  await setDoc(ref, updates, { merge: true });
 }
 
 export async function getAllTopicProgress(uid: string): Promise<Record<string, TopicProgress>> {
@@ -113,6 +103,23 @@ export async function saveWrongAnswer(
   });
 }
 
+export async function saveWrongAnswersBatch(
+  uid: string,
+  items: { question: QuestionSnapshot; selected: string | null }[]
+): Promise<void> {
+  if (items.length === 0) return;
+  const batch = writeBatch(firestore);
+  for (const { question, selected } of items) {
+    const ref = doc(aptitudeWrongAnswersCol(uid), question.id);
+    batch.set(ref, {
+      ...question,
+      selected,
+      recordedAt: serverTimestamp(),
+    });
+  }
+  await batch.commit();
+}
+
 export async function removeWrongAnswer(uid: string, questionId: string): Promise<void> {
   await deleteDoc(doc(aptitudeWrongAnswersCol(uid), questionId));
 }
@@ -144,22 +151,14 @@ export async function getAptitudeMeta(uid: string): Promise<AptitudeMeta | null>
 
 export async function recordPracticeDate(uid: string, dateStr: string): Promise<void> {
   const ref = aptitudeMetaDoc(uid);
-  const snap = await getDoc(ref);
-  if (snap.exists()) {
-    const data = snap.data() as AptitudeMeta;
-    if (!data.practiceDates.includes(dateStr)) {
-      await updateDoc(ref, {
-        practiceDates: [...data.practiceDates, dateStr],
-        lastUpdated: new Date().toISOString(),
-      });
-    }
-  } else {
-    await setDoc(ref, {
-      practiceDates: [dateStr],
-      dailyChallenge: {},
+  await setDoc(
+    ref,
+    {
+      practiceDates: arrayUnion(dateStr),
       lastUpdated: new Date().toISOString(),
-    });
-  }
+    },
+    { merge: true }
+  );
 }
 
 export async function saveDailyChallenge(
@@ -168,20 +167,15 @@ export async function saveDailyChallenge(
   result: { score: number; accuracy: number; completedAt: string }
 ): Promise<void> {
   const ref = aptitudeMetaDoc(uid);
-  const snap = await getDoc(ref);
-  const existing = snap.exists() ? (snap.data() as AptitudeMeta) : null;
-  if (existing) {
-    await updateDoc(ref, {
+  await setDoc(
+    ref,
+    {
+      practiceDates: arrayUnion(dateStr),
       [`dailyChallenge.${dateStr}`]: result,
       lastUpdated: new Date().toISOString(),
-    });
-  } else {
-    await setDoc(ref, {
-      practiceDates: [dateStr],
-      dailyChallenge: { [dateStr]: result },
-      lastUpdated: new Date().toISOString(),
-    });
-  }
+    },
+    { merge: true }
+  );
 }
 
 export function calculateStreak(practiceDates: string[]): number {
