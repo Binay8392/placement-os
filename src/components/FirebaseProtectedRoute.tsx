@@ -7,7 +7,7 @@ interface FirebaseProtectedRouteProps {
 }
 
 export function FirebaseProtectedRoute({ children }: FirebaseProtectedRouteProps) {
-  const { user, loading } = useFirebaseAuth();
+  const { user, loading, needsEmailVerification } = useFirebaseAuth();
 
   if (loading) {
     return (
@@ -19,6 +19,10 @@ export function FirebaseProtectedRoute({ children }: FirebaseProtectedRouteProps
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (needsEmailVerification) {
+    return <Navigate to="/verify-email" replace />;
   }
 
   return <>{children}</>;
