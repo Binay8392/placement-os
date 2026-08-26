@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2, Circle, Clock, Share2 } from 'lucide-react';
+import { useCallback, Component } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, ChevronLeft, ChevronRight, CheckCircle2, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -12,20 +12,76 @@ import { DSA_VIDEOS } from '@/features/dsa/data/dsaVideos';
 import { DSAVideoPlayer } from '@/features/dsa/components/DSAVideoPlayer';
 import { DSAResources } from '@/features/dsa/components/DSAResources';
 
+// ─── Error Boundary: catches any render crash inside DSAVideoPlayer ───────────
+class DSAPlayerErrorBoundary extends Component<
+  { children: React.ReactNode; videoId: string },
+  { error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; videoId: string }) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error('[DSAPlayerErrorBoundary] Player crashed:', error.message, info.componentStack);
+  }
+  render() {
+    if (this.state.error) {
+      const youtubeUrl = `https://www.youtube.com/watch?v=${this.props.videoId}&list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA`;
+      return (
+        <div className="aspect-video w-full rounded-2xl border border-destructive/40 bg-destructive/5 flex flex-col items-center justify-center gap-4 p-6 text-center">
+          <p className="font-bold text-destructive text-sm">Unable to load this video</p>
+          <p className="text-xs text-muted-foreground max-w-sm">
+            {this.state.error.message}
+          </p>
+          <div className="flex items-center gap-3 flex-wrap justify-center">
+            <a
+              href={youtubeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors"
+            >
+              Open on YouTube
+            </a>
+            <a
+              href="/dsa"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+            >
+              ← Back to DSA Roadmap
+            </a>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function DSAVideoPage() {
   const { videoId } = useParams<{ videoId: string }>();
   const navigate = useNavigate();
   const { user } = useFirebaseAuth();
   const { allProgress, markAsViewed, markAsNotCompleted, updateWatchProgress } = useDSAProgress(user?.uid);
 
-  // Find video in catalog
+  // Diagnostic log
+  console.log('[DSAVideoPage] ROUTE VIDEO ID:', videoId);
+
+  // Find video in catalog (match by videoId or internal id)
   const videoIndex = DSA_VIDEOS.findIndex(
     (v) => v.videoId === videoId || v.id === videoId
   );
   const video = videoIndex >= 0 ? DSA_VIDEOS[videoIndex] : null;
 
+  console.log('[DSAVideoPage] FOUND VIDEO:', video ? video.title : 'NOT FOUND');
+
   const prevVideo = videoIndex > 0 ? DSA_VIDEOS[videoIndex - 1] : null;
-  const nextVideo = videoIndex >= 0 && videoIndex < DSA_VIDEOS.length - 1 ? DSA_VIDEOS[videoIndex + 1] : null;
+  const nextVideo =
+    videoIndex >= 0 && videoIndex < DSA_VIDEOS.length - 1
+      ? DSA_VIDEOS[videoIndex + 1]
+      : null;
 
   const progress = video ? allProgress[video.id] || allProgress[video.videoId] : null;
   const isCompleted = progress?.status === 'completed';
@@ -56,10 +112,13 @@ export default function DSAVideoPage() {
     }
   };
 
+  // ── Not found ──
   if (!video) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center">
-        <p className="text-muted-foreground">Lecture video not found.</p>
+        <p className="text-muted-foreground">
+          Lecture not found for ID: <code className="text-xs bg-muted px-1 rounded">{videoId}</code>
+        </p>
         <Button onClick={() => navigate('/dsa')} variant="outline">
           Back to DSA Roadmap
         </Button>
@@ -141,14 +200,16 @@ export default function DSAVideoPage() {
           )}
         </div>
 
-        {/* Player Container */}
-        <DSAVideoPlayer
-          videoId={video.videoId}
-          title={video.title}
-          startPositionSeconds={progress?.lastPositionSeconds || 0}
-          onEnded={handleEnded}
-          onProgressUpdate={handleProgress}
-        />
+        {/* Player — wrapped in ErrorBoundary so crashes show a helpful message, not white screen */}
+        <DSAPlayerErrorBoundary videoId={video.videoId}>
+          <DSAVideoPlayer
+            videoId={video.videoId}
+            title={video.title}
+            startPositionSeconds={progress?.lastPositionSeconds || 0}
+            onEnded={handleEnded}
+            onProgressUpdate={handleProgress}
+          />
+        </DSAPlayerErrorBoundary>
 
         {/* Action Controls & Progress Row */}
         <div className="bg-card border border-border rounded-2xl p-4 md:p-5 space-y-4">
