@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Play,
   Pause,
@@ -8,6 +8,7 @@ import {
   ExternalLink,
   RefreshCw,
   Gauge,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +48,10 @@ export function DSAVideoPlayer({
   const playerRef = useRef<any>(null);
   const intervalRef = useRef<any>(null);
 
+  // Development logging
+  console.log('DSA VIDEO ID:', videoId);
+  console.log('YOUTUBE URL:', `https://www.youtube.com/watch?v=${videoId}`);
+
   // Store callbacks in stable refs so prop changes NEVER recreate the player
   const onEndedRef = useRef(onEnded);
   const onProgressUpdateRef = useRef(onProgressUpdate);
@@ -66,10 +71,14 @@ export function DSAVideoPlayer({
   const [duration, setDuration] = useState(0);
   const [playbackRate, setPlaybackRate] = useState<number>(1);
   const [playerReady, setPlayerReady] = useState(false);
+  const [playerError, setPlayerError] = useState<string | null>(null);
+  const [useIframeFallback, setUseIframeFallback] = useState(false);
 
   // Initialize YouTube IFrame Player ONCE per videoId change
   useEffect(() => {
     let isMounted = true;
+    setPlayerError(null);
+    setUseIframeFallback(false);
 
     const initPlayer = () => {
       if (!window.YT || !window.YT.Player) return;
@@ -82,59 +91,72 @@ export function DSAVideoPlayer({
         }
       }
 
-      playerRef.current = new window.YT.Player(`yt-player-${videoId}`, {
-        videoId: videoId,
-        playerVars: {
-          autoplay: 0,
-          controls: 1,
-          rel: 0,
-          modestbranding: 1,
-          start: initialStartPosRef.current ? Math.floor(initialStartPosRef.current) : 0,
-        },
-        events: {
-          onReady: (event: any) => {
-            if (!isMounted) return;
-            setPlayerReady(true);
-            const dur = event.target.getDuration ? event.target.getDuration() : 0;
-            if (dur > 0) setDuration(dur);
-            console.log('[DSAVideoPlayer] PLAYER_READY', { videoId, duration: dur });
+      try {
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        playerRef.current = new window.YT.Player(`yt-player-${videoId}`, {
+          host: 'https://www.youtube.com',
+          videoId: videoId,
+          playerVars: {
+            autoplay: 0,
+            controls: 1,
+            rel: 0,
+            enablejsapi: 1,
+            origin: origin,
+            modestbranding: 1,
+            start: initialStartPosRef.current ? Math.floor(initialStartPosRef.current) : 0,
           },
-          onStateChange: (event: any) => {
-            if (!isMounted) return;
-            const state = event.data;
-            // 1 = PLAYING, 2 = PAUSED, 0 = ENDED, 3 = BUFFERING
-            if (state === window.YT.PlayerState.PLAYING) {
-              setIsPlaying(true);
+          events: {
+            onReady: (event: any) => {
+              if (!isMounted) return;
+              setPlayerReady(true);
               const dur = event.target.getDuration ? event.target.getDuration() : 0;
               if (dur > 0) setDuration(dur);
-              console.log('[DSAVideoPlayer] PLAYER_PLAYING');
-            } else if (state === window.YT.PlayerState.PAUSED) {
-              setIsPlaying(false);
-              console.log('[DSAVideoPlayer] PLAYER_PAUSED');
-              if (event.target.getCurrentTime) {
-                const cur = event.target.getCurrentTime();
+              console.log('[DSAVideoPlayer] PLAYER_READY', { videoId, duration: dur });
+            },
+            onStateChange: (event: any) => {
+              if (!isMounted) return;
+              const state = event.data;
+              // 1 = PLAYING, 2 = PAUSED, 0 = ENDED, 3 = BUFFERING
+              if (state === window.YT.PlayerState.PLAYING) {
+                setIsPlaying(true);
                 const dur = event.target.getDuration ? event.target.getDuration() : 0;
-                onProgressUpdateRef.current?.(cur, dur, false);
+                if (dur > 0) setDuration(dur);
+                console.log('[DSAVideoPlayer] PLAYER_PLAYING');
+              } else if (state === window.YT.PlayerState.PAUSED) {
+                setIsPlaying(false);
+                console.log('[DSAVideoPlayer] PLAYER_PAUSED');
+                if (event.target.getCurrentTime) {
+                  const cur = event.target.getCurrentTime();
+                  const dur = event.target.getDuration ? event.target.getDuration() : 0;
+                  onProgressUpdateRef.current?.(cur, dur, false);
+                }
+              } else if (state === window.YT.PlayerState.ENDED) {
+                setIsPlaying(false);
+                setIsCompleted(true);
+                console.log('[DSAVideoPlayer] PLAYER_ENDED');
+                if (event.target.getDuration) {
+                  const dur = event.target.getDuration();
+                  setCurrentTime(dur);
+                  onProgressUpdateRef.current?.(dur, dur, true);
+                }
+                onEndedRef.current?.();
+              } else if (state === window.YT.PlayerState.BUFFERING) {
+                console.log('[DSAVideoPlayer] PLAYER_BUFFERING');
               }
-            } else if (state === window.YT.PlayerState.ENDED) {
-              setIsPlaying(false);
-              setIsCompleted(true);
-              console.log('[DSAVideoPlayer] PLAYER_ENDED');
-              if (event.target.getDuration) {
-                const dur = event.target.getDuration();
-                setCurrentTime(dur);
-                onProgressUpdateRef.current?.(dur, dur, true);
-              }
-              onEndedRef.current?.();
-            } else if (state === window.YT.PlayerState.BUFFERING) {
-              console.log('[DSAVideoPlayer] PLAYER_BUFFERING');
-            }
+            },
+            onError: (err: any) => {
+              console.error('[DSAVideoPlayer] PLAYER_ERROR', err);
+              // Error 100, 101, 150 -> use iframe fallback
+              setUseIframeFallback(true);
+              setPlayerReady(true);
+            },
           },
-          onError: (err: any) => {
-            console.error('[DSAVideoPlayer] PLAYER_ERROR', err);
-          },
-        },
-      });
+        });
+      } catch (err) {
+        console.error('[DSAVideoPlayer] Init Exception:', err);
+        setUseIframeFallback(true);
+        setPlayerReady(true);
+      }
     };
 
     if (!window.YT) {
@@ -150,6 +172,25 @@ export function DSAVideoPlayer({
         if (prevOnReady) prevOnReady();
         initPlayer();
       };
+      // Fallback timer if script is slow/blocked
+      const fallbackTimer = setTimeout(() => {
+        if (!playerReady && isMounted && !window.YT) {
+          setUseIframeFallback(true);
+          setPlayerReady(true);
+        }
+      }, 3500);
+
+      return () => {
+        isMounted = false;
+        clearTimeout(fallbackTimer);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+          try {
+            playerRef.current.destroy();
+          } catch (e) {}
+          playerRef.current = null;
+        }
+      };
     } else {
       initPlayer();
     }
@@ -160,9 +201,7 @@ export function DSAVideoPlayer({
       if (playerRef.current && typeof playerRef.current.destroy === 'function') {
         try {
           playerRef.current.destroy();
-        } catch (e) {
-          console.warn('[DSAVideoPlayer] Error destroying player:', e);
-        }
+        } catch (e) {}
         playerRef.current = null;
       }
     };
@@ -170,7 +209,7 @@ export function DSAVideoPlayer({
 
   // Interval polling for currentTime during playback
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && !useIframeFallback) {
       intervalRef.current = setInterval(() => {
         if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
           const cur = playerRef.current.getCurrentTime();
@@ -187,7 +226,7 @@ export function DSAVideoPlayer({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isPlaying, duration]);
+  }, [isPlaying, duration, useIframeFallback]);
 
   // Player controls
   const togglePlayPause = () => {
@@ -249,6 +288,8 @@ export function DSAVideoPlayer({
   }, [isPlaying, duration]);
 
   const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}&list=PLDzeHZWIZsTryvtXdMr6rPh4IDexB5NIA`;
+  const originParam = typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : '';
+  const embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&origin=${originParam}&rel=0&autoplay=0&controls=1`;
 
   return (
     <div className={cn('space-y-3', className)}>
@@ -257,10 +298,20 @@ export function DSAVideoPlayer({
         ref={containerRef}
         className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black border border-border shadow-md"
       >
-        <div id={`yt-player-${videoId}`} className="w-full h-full" />
+        {useIframeFallback ? (
+          <iframe
+            src={embedUrl}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            className="w-full h-full border-0"
+          />
+        ) : (
+          <div id={`yt-player-${videoId}`} className="w-full h-full" />
+        )}
 
         {/* Loading Overlay before IFrame API Ready */}
-        {!playerReady && (
+        {!playerReady && !useIframeFallback && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 text-white gap-3 p-4">
             <RefreshCw className="h-8 w-8 animate-spin text-primary" />
             <p className="text-sm font-medium text-muted-foreground">Loading YouTube Player...</p>
