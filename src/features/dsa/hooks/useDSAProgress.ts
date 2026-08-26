@@ -108,7 +108,7 @@ export function useDSAProgress(uid: string | undefined) {
       if (totalSeconds <= 0) return;
 
       const pct = Math.min(100, Math.round((currentSeconds / totalSeconds) * 100));
-      const isEnded = currentSeconds >= totalSeconds - 2 || pct >= 98;
+      const isEnded = Boolean(forceImmediate && pct >= 95);
       const status: DSAVideoStatus = isEnded
         ? 'completed'
         : currentSeconds > 5
