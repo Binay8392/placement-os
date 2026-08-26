@@ -64,7 +64,7 @@ export default function DSAVideoPage() {
   const { videoId } = useParams<{ videoId: string }>();
   const navigate = useNavigate();
   const { user } = useFirebaseAuth();
-  const { allProgress, markAsViewed, markAsNotCompleted, updateWatchProgress } = useDSAProgress(user?.uid);
+  const { allProgress, markAsViewed, markAsNotCompleted, updateWatchProgress, completeVideo } = useDSAProgress(user?.uid);
 
   // Diagnostic log
   console.log('[DSAVideoPage] ROUTE VIDEO ID:', videoId);
@@ -89,9 +89,9 @@ export default function DSAVideoPage() {
 
   const handleEnded = useCallback(() => {
     if (!video) return;
-    void markAsViewed(video.id, video.durationSeconds);
+    void completeVideo(video.id, video.durationSeconds);
     toast.success('Great! Lecture completed.');
-  }, [video, markAsViewed]);
+  }, [video, completeVideo]);
 
   const handleProgress = useCallback(
     (current: number, total: number, isEnding?: boolean) => {
@@ -107,7 +107,7 @@ export default function DSAVideoPage() {
       await markAsNotCompleted(video.id);
       toast.info('Lecture marked as not completed.');
     } else {
-      await markAsViewed(video.id, video.durationSeconds);
+      await completeVideo(video.id, video.durationSeconds);
       toast.success('Lecture marked as completed.');
     }
   };

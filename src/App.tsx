@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { FirebaseAuthProvider } from "@/hooks/useFirebaseAuth";
+import { DSAProgressProvider } from "@/features/dsa/context/DSAProgressContext";
 import { FirebaseProtectedRoute } from "@/components/FirebaseProtectedRoute";
 import { AppShell } from "@/components/AppShell";
 import { useSwipeNavigation } from "@/hooks/use-swipe-navigation";
@@ -127,13 +128,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <FirebaseAuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </TooltipProvider>
+        <DSAProgressProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </DSAProgressProvider>
       </FirebaseAuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
