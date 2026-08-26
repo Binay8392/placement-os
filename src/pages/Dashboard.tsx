@@ -18,10 +18,13 @@ import {
   Target,
   Trophy,
   Zap,
+  Video,
 } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { motion } from 'framer-motion';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useDSAProgress } from '@/features/dsa/hooks/useDSAProgress';
+import { useDSAContinueLearning } from '@/features/dsa/hooks/useDSAContinueLearning';
 import {
   calculateStreak,
   getTodayString,
@@ -151,6 +154,8 @@ export default function Dashboard() {
     toggleTaskStatus,
   } = useStore();
   const { user } = useFirebaseAuth();
+  const { allProgress } = useDSAProgress(user?.uid);
+  const dsaVideoMetrics = useDSAContinueLearning(allProgress);
 
   const today = getTodayString();
   const firstName = user?.displayName?.split(' ')[0] || profile.name?.split(' ')[0] || 'there';
@@ -205,8 +210,9 @@ export default function Dashboard() {
       leetCodeProgress.hardSolved;
     const leetCodeTarget = Math.max(leetCodeProgress.target, 1);
     const roadmapCoverage = dsaTopics.length > 0 ? masteredTopics / dsaTopics.length : 0;
+    const dsaVideoRatio = (dsaVideoMetrics.progressPercent || 0) / 100;
     const coding = clampScore(
-      (leetCodeTotal / leetCodeTarget) * 55 + roadmapCoverage * 45,
+      (leetCodeTotal / leetCodeTarget) * 40 + roadmapCoverage * 30 + dsaVideoRatio * 30,
     );
 
     const aptitudeAttempted = aptitudeTopics.reduce((total, topic) => total + topic.attempted, 0);
@@ -549,28 +555,29 @@ export default function Dashboard() {
 
         <section className="grid gap-6 lg:grid-cols-3">
           <Card className="border-border/70 bg-card/75 shadow-sm">
-            <CardContent className="p-5 sm:p-6">
+            <CardContent className="p-5 sm:p-6 space-y-3">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <CircleDot className="h-5 w-5" />
+                  <Video className="h-5 w-5" />
                 </div>
-                <Badge variant="outline" className="font-mono font-normal">
-                  {weakestTopic ? `${weakestTopic.confidence}% confidence` : 'Roadmap ready'}
+                <Badge variant="outline" className="font-mono font-semibold text-primary">
+                  {dsaVideoMetrics.progressPercent}%
                 </Badge>
               </div>
-              <p className="mt-5 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
-                Recommended next
+              <p className="mt-4 text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                DSA Video Roadmap
               </p>
-              <h3 className="mt-2 text-lg font-semibold">
-                {weakestTopic ? `Strengthen ${weakestTopic.name}` : 'Choose your next DSA topic'}
+              <h3 className="text-base font-semibold truncate">
+                {dsaVideoMetrics.continueVideo.title}
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {weakestTopic
-                  ? 'This is currently your lowest-confidence active topic—the best place for a focused revision block.'
-                  : 'Your roadmap is ready. Pick a pattern and begin with one deliberate practice session.'}
+              <p className="text-xs text-muted-foreground line-clamp-1">
+                Topic: {dsaVideoMetrics.continueVideo.topic} · {dsaVideoMetrics.completedCount} / {dsaVideoMetrics.totalVideos} lectures completed
               </p>
-              <Button asChild variant="link" className="mt-3 h-auto p-0">
-                <Link to="/dsa">Open DSA roadmap <ArrowRight className="h-4 w-4" /></Link>
+              <Progress value={dsaVideoMetrics.progressPercent} className="h-1.5 mt-2" />
+              <Button asChild variant="link" className="mt-2 h-auto p-0">
+                <Link to={`/dsa/video/${dsaVideoMetrics.continueVideo.videoId}`}>
+                  Continue Learning <ArrowRight className="h-4 w-4 ml-1" />
+                </Link>
               </Button>
             </CardContent>
           </Card>

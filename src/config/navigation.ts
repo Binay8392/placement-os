@@ -51,7 +51,7 @@ export const NAVIGATION_SECTIONS: ProductNavSection[] = [
   {
     label: 'Practice',
     items: [
-      { to: '/dsa', label: 'DSA roadmap', description: 'Master every core pattern', icon: Code2 },
+      { to: '/dsa', label: 'DSA roadmap', description: 'Master every core pattern', icon: Code2, matchPrefix: '/dsa' },
       { to: '/leetcode', label: 'Coding tracker', description: 'Track coding problem progress', icon: Terminal },
       { to: '/code-war-room', label: 'Code War Room', shortLabel: 'War Room', description: 'Practice hardcoded coding battles', icon: Swords },
       { to: '/game-arena', label: 'Game Arena', shortLabel: 'Arena', description: 'Aptitude games and full simulations', icon: Gamepad2, matchPrefix: '/game-arena' },

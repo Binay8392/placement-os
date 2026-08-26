@@ -16,6 +16,7 @@ const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const StudyTimer = lazy(() => import("@/pages/StudyTimer"));
 const HabitsPage = lazy(() => import("@/pages/HabitsPage"));
 const DSAPage = lazy(() => import("@/pages/DSAPage"));
+const DSAVideoPage = lazy(() => import("@/pages/DSAVideoPage"));
 const AptitudePage = lazy(() => import("@/pages/AptitudePage"));
 const AptitudeTopicPage = lazy(() => import("@/pages/AptitudeTopicPage"));
 const AptitudePracticePage = lazy(() => import("@/pages/AptitudePracticePage"));
@@ -83,6 +84,7 @@ function AppContent() {
           <Route path="/timer" element={<FirebaseProtectedRoute><StudyTimer /></FirebaseProtectedRoute>} />
           <Route path="/habits" element={<FirebaseProtectedRoute><HabitsPage /></FirebaseProtectedRoute>} />
           <Route path="/dsa" element={<FirebaseProtectedRoute><DSAPage /></FirebaseProtectedRoute>} />
+          <Route path="/dsa/video/:videoId" element={<FirebaseProtectedRoute><DSAVideoPage /></FirebaseProtectedRoute>} />
           <Route path="/aptitude" element={<FirebaseProtectedRoute><AptitudePage /></FirebaseProtectedRoute>} />
           <Route path="/aptitude/topic/:topicId" element={<FirebaseProtectedRoute><AptitudeTopicPage /></FirebaseProtectedRoute>} />
           <Route path="/aptitude/practice/:topicId" element={<FirebaseProtectedRoute><AptitudePracticePage /></FirebaseProtectedRoute>} />
