@@ -35,6 +35,14 @@ const ResumeBuilderPage = lazy(() => import("@/pages/ResumeBuilderPage"));
 const MockInterviewPage = lazy(() => import("@/pages/MockInterviewPage"));
 const AIChatPage = lazy(() => import("@/pages/AIChatPage"));
 const SupportUsPage = lazy(() => import("@/pages/SupportUsPage"));
+
+// Coding Lab Pages
+const CodingLabPage = lazy(() => import("@/pages/CodingLabPage"));
+const CodingLabWorkspacePage = lazy(() => import("@/pages/CodingLabWorkspacePage"));
+const CodingLabAssessmentPage = lazy(() => import("@/pages/CodingLabAssessmentPage"));
+const CodingLabResultsPage = lazy(() => import("@/pages/CodingLabResultsPage"));
+const CodingLabHistoryPage = lazy(() => import("@/pages/CodingLabHistoryPage"));
+
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -86,6 +94,15 @@ function AppContent() {
           <Route path="/mock-interview" element={<FirebaseProtectedRoute><MockInterviewPage /></FirebaseProtectedRoute>} />
           <Route path="/ai-chat" element={<FirebaseProtectedRoute><AIChatPage /></FirebaseProtectedRoute>} />
           <Route path="/support-us" element={<FirebaseProtectedRoute><SupportUsPage /></FirebaseProtectedRoute>} />
+
+          {/* Coding Lab Routes */}
+          <Route path="/coding-lab" element={<FirebaseProtectedRoute><CodingLabPage /></FirebaseProtectedRoute>} />
+          <Route path="/coding-lab/debugging" element={<FirebaseProtectedRoute><CodingLabWorkspacePage /></FirebaseProtectedRoute>} />
+          <Route path="/coding-lab/practice" element={<FirebaseProtectedRoute><CodingLabWorkspacePage /></FirebaseProtectedRoute>} />
+          <Route path="/coding-lab/assessment" element={<FirebaseProtectedRoute><CodingLabAssessmentPage /></FirebaseProtectedRoute>} />
+          <Route path="/coding-lab/history" element={<FirebaseProtectedRoute><CodingLabHistoryPage /></FirebaseProtectedRoute>} />
+          <Route path="/coding-lab/results/:attemptId" element={<FirebaseProtectedRoute><CodingLabResultsPage /></FirebaseProtectedRoute>} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

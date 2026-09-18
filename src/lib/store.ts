@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { AssessmentAttempt } from '../features/coding-lab/types';
 
 // Types
 export interface StudySession {
@@ -396,6 +397,10 @@ interface AppState {
   companyEligibilities: CompanyEligibility[];
   addCompanyEligibility: (e: Omit<CompanyEligibility, 'id' | 'createdAt'>) => void;
   deleteCompanyEligibility: (id: string) => void;
+
+  // Coding Lab State & Readiness Integration
+  codingAttempts: AssessmentAttempt[];
+  recordCodingAttempt: (attempt: AssessmentAttempt) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -800,6 +805,53 @@ export const useStore = create<AppState>()(
       deleteCompanyEligibility: (id) => set((state) => ({
         companyEligibilities: state.companyEligibilities.filter(e => e.id !== id)
       })),
+
+      // Coding Lab & Readiness Integration
+      codingAttempts: [],
+      recordCodingAttempt: (attempt: AssessmentAttempt) => set((state) => {
+        const updatedAttempts = [attempt, ...(state.codingAttempts || [])];
+
+        // Directly sync solved problems with dsaTopics
+        const updatedDSATopics = state.dsaTopics.map((topic) => {
+          let solvedCount = 0;
+          Object.values(attempt.problemAttempts || {}).forEach((pa) => {
+            if (pa.status === 'ACCEPTED') {
+              const pid = pa.problemId.toLowerCase();
+              if (topic.id === 'arrays' && (pid.includes('array') || pid.includes('py-02') || pid.includes('cpp-09'))) solvedCount++;
+              else if (topic.id === 'strings' && (pid.includes('string') || pid.includes('js-03') || pid.includes('py-10'))) solvedCount++;
+              else if (topic.id === 'searching' && (pid.includes('search') || pid.includes('cpp-01'))) solvedCount++;
+              else if (topic.id === 'linkedlist' && (pid.includes('list') || pid.includes('cpp-06'))) solvedCount++;
+              else if (topic.id === 'stackqueue' && (pid.includes('stack') || pid.includes('java-04'))) solvedCount++;
+              else if (topic.id === 'recursion' && (pid.includes('recursion') || pid.includes('py-05'))) solvedCount++;
+            }
+          });
+
+          if (solvedCount > 0) {
+            const newSolved = topic.questionsSolved + solvedCount;
+            const newConfidence = Math.min(100, topic.confidence + solvedCount * 12);
+            const newStatus = newConfidence >= 80 ? 'mastered' : 'in-progress';
+            return {
+              ...topic,
+              questionsSolved: newSolved,
+              confidence: newConfidence,
+              status: newStatus as 'not-started' | 'in-progress' | 'mastered',
+            };
+          }
+          return topic;
+        });
+
+        // Advance LeetCode count as well
+        const updatedLeetCode = {
+          ...state.leetCodeProgress,
+          mediumSolved: state.leetCodeProgress.mediumSolved + attempt.passedProblems,
+        };
+
+        return {
+          codingAttempts: updatedAttempts,
+          dsaTopics: updatedDSATopics,
+          leetCodeProgress: updatedLeetCode,
+        };
+      }),
     }),
     {
       name: 'preptrack-storage',
@@ -834,7 +886,7 @@ export const calculateStreak = (activities: DailyActivity[]): { current: number;
   const yesterdayStr = yesterday.toISOString().split('T')[0];
   
   // Start from today or yesterday
-  let startDate = sortedDates[0] === today || sortedDates[0] === yesterdayStr ? sortedDates[0] : null;
+  const startDate = sortedDates[0] === today || sortedDates[0] === yesterdayStr ? sortedDates[0] : null;
   if (startDate) {
     for (let i = 0; i < 365; i++) {
       const checkDate = new Date(startDate);

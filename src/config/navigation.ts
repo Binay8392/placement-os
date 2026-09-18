@@ -50,6 +50,7 @@ export const NAVIGATION_SECTIONS: ProductNavSection[] = [
   {
     label: 'Practice',
     items: [
+      { to: '/coding-lab', label: 'Coding Lab', shortLabel: 'Coding Lab', description: 'AI debugging & enterprise coding lab', icon: Terminal, matchPrefix: '/coding-lab' },
       { to: '/dsa', label: 'DSA roadmap', description: 'Master every core pattern', icon: Code2 },
       { to: '/leetcode', label: 'Coding tracker', description: 'Track coding problem progress', icon: Terminal },
       { to: '/code-war-room', label: 'Code War Room', shortLabel: 'War Room', description: 'Practice hardcoded coding battles', icon: Swords },
