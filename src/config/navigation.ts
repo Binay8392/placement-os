@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
+  Award,
   BarChart3,
   BookOpen,
   BriefcaseBusiness,
@@ -52,6 +53,7 @@ export const NAVIGATION_SECTIONS: ProductNavSection[] = [
     label: 'Practice',
     items: [
       { to: '/coding-lab', label: 'Coding Lab', shortLabel: 'Coding Lab', description: 'AI debugging & enterprise coding lab', icon: Terminal, matchPrefix: '/coding-lab' },
+      { to: '/coding-lab/capgemini', label: 'Capgemini Prep', shortLabel: 'Capgemini', description: '73+ placement questions, debugging & SQL', icon: Award, matchPrefix: '/coding-lab/capgemini' },
       { to: '/dsa', label: 'DSA roadmap', description: 'Master every core pattern', icon: Code2, matchPrefix: '/dsa' },
       { to: '/game-arena', label: 'Game Arena', shortLabel: 'Arena', description: 'Aptitude games and full simulations', icon: Gamepad2, matchPrefix: '/game-arena' },
       { to: '/aptitude', label: 'Aptitude', description: 'Quant, logic, and verbal practice', icon: BookOpen, matchPrefix: '/aptitude' },

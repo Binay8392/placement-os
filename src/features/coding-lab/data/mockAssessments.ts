@@ -62,6 +62,28 @@ export const MOCK_ASSESSMENTS: MockAssessmentPreset[] = [
     rules: ["Practice under realistic time pressure."],
     problemIds: ["debug-py-05", "debug-js-07", "debug-py-10"],
   },
+  {
+    id: "capgemini-technical-mock",
+    title: "Capgemini Technical Assessment Simulation",
+    subtitle: "Enterprise Recruitment Diagnostic Mock",
+    durationMinutes: 45,
+    difficulty: "Mixed",
+    totalQuestions: 5,
+    description:
+      "A timed 45-minute enterprise assessment simulation modeled on Capgemini's technical test patterns. Covers multi-language debugging, algorithmic edge cases, and boundary correctness.",
+    instructions: [
+      "You have 45 minutes to diagnose and resolve 5 technical coding problems.",
+      "Each problem contains pre-written code with logical or boundary bugs.",
+      "Evaluate against public test cases, then submit for server-side evaluation.",
+      "AI Coach is locked during this assessment to emulate actual exam conditions.",
+    ],
+    rules: [
+      "Full-screen focus recommended.",
+      "All submissions are auto-scored against hidden test cases upon final submission.",
+      "A passing grade requires at least 75% test suite coverage.",
+    ],
+    problemIds: ["debug-cpp-01", "debug-py-02", "debug-java-04", "debug-cpp-06", "debug-java-08"],
+  },
 ];
 
 export function getMockAssessment(id: string): { preset: MockAssessmentPreset; problems: DebuggingProblem[] } | null {

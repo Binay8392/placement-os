@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Brain,
   Lightbulb,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -196,6 +197,41 @@ export default function CodingLabPage() {
             <span>Start Recommended Practice</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Featured: Capgemini Placement Preparation Pack */}
+      <Card className="border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-background to-card relative overflow-hidden shadow-md">
+        <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-500 shrink-0">
+              <Award className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/40 text-[10px] font-semibold uppercase">
+                  Featured Placement Pack
+                </Badge>
+                <span className="text-xs text-muted-foreground">• 73 Original Questions</span>
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                Capgemini Placement Preparation Pack
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed">
+                Comprehensive technical question bank including 11 debugging drills, 14 output-prediction traps, 10 original coding challenges, 5 SQL writing tasks, and scenario-based AI/GenAI assessments.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+            <Button
+              onClick={() => navigate("/coding-lab/capgemini")}
+              className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold gap-1.5 shadow-sm w-full sm:w-auto"
+            >
+              <span>Open Capgemini Pack</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

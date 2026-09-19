@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RotateCcw, Copy, Check, Play, Sparkles } from "lucide-react";
+import { RotateCcw, Copy, Check, Play, Sparkles, Maximize2, Minimize2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface CodeEditorProps {
@@ -25,6 +25,10 @@ interface CodeEditorProps {
   isSubmitting?: boolean;
   readOnly?: boolean;
   allowLanguageChange?: boolean;
+  isFocusMode?: boolean;
+  onToggleFocusMode?: () => void;
+  problemTitle?: string;
+  statusBadge?: React.ReactNode;
 }
 
 export const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -40,6 +44,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
   isSubmitting = false,
   readOnly = false,
   allowLanguageChange = true,
+  isFocusMode = false,
+  onToggleFocusMode,
+  problemTitle,
+  statusBadge,
 }) => {
   const { toast } = useToast();
   const [copied, setCopied] = React.useState(false);
@@ -91,13 +99,22 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
     <div className="flex flex-col h-full bg-[#1e1e1e] border border-border/40 rounded-lg overflow-hidden shadow-sm">
       {/* Editor Toolbar */}
       <div className="flex items-center justify-between px-3 py-2 bg-[#252526] border-b border-[#333333] select-none text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          {isFocusMode && problemTitle && (
+            <div className="flex items-center gap-2 truncate mr-2">
+              <span className="font-semibold text-foreground truncate max-w-[220px] sm:max-w-[340px]">
+                {problemTitle}
+              </span>
+              {statusBadge}
+            </div>
+          )}
+
           {allowLanguageChange ? (
             <Select
               value={language}
               onValueChange={(val) => onLanguageChange?.(val as Language)}
             >
-              <SelectTrigger className="h-7 w-32 bg-[#1e1e1e] border-[#3e3e42] text-xs text-foreground font-mono">
+              <SelectTrigger className="h-7 w-28 sm:w-32 bg-[#1e1e1e] border-[#3e3e42] text-xs text-foreground font-mono">
                 <SelectValue placeholder="Language" />
               </SelectTrigger>
               <SelectContent className="bg-[#252526] border-[#3e3e42] text-foreground">
@@ -113,13 +130,15 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             </span>
           )}
 
-          <span className="hidden sm:inline text-xs text-muted-foreground/60 border-l border-[#3e3e42] pl-2">
-            Ctrl+Enter to Run
-          </span>
+          {!isFocusMode && (
+            <span className="hidden sm:inline text-xs text-muted-foreground/60 border-l border-[#3e3e42] pl-2">
+              Ctrl+Enter to Run
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center gap-1.5">
-          {onOpenAIGenerate && (
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onOpenAIGenerate && !isFocusMode && (
             <Button
               variant="outline"
               size="sm"
@@ -128,7 +147,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               title="Generate code with AI assistance"
             >
               <Sparkles className="w-3.5 h-3.5 mr-1" />
-              <span className="hidden md:inline">Generate Code</span>
+              <span className="hidden md:inline">Generate</span>
             </Button>
           )}
 
@@ -160,6 +179,28 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
             <span className="hidden md:inline">{copied ? "Copied" : "Copy"}</span>
           </Button>
 
+          {onToggleFocusMode && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleFocusMode}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-[#333333]"
+              title={isFocusMode ? "Exit Focus Mode" : "Maximize Editor (Focus Mode)"}
+            >
+              {isFocusMode ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 mr-1 text-primary" />
+                  <span className="text-xs">Exit Focus</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 mr-1" />
+                  <span className="hidden md:inline">Focus</span>
+                </>
+              )}
+            </Button>
+          )}
+
           {onRun && (
             <Button
               variant="secondary"
@@ -169,7 +210,7 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({
               className="h-7 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-0 font-medium"
             >
               <Play className="w-3.5 h-3.5 mr-1 fill-current" />
-              {isRunning ? "Running..." : "Run Code"}
+              {isRunning ? "Running..." : "Run"}
             </Button>
           )}
 

@@ -52,6 +52,7 @@ const CodingLabWorkspacePage = lazy(() => import("@/pages/CodingLabWorkspacePage
 const CodingLabAssessmentPage = lazy(() => import("@/pages/CodingLabAssessmentPage"));
 const CodingLabResultsPage = lazy(() => import("@/pages/CodingLabResultsPage"));
 const CodingLabHistoryPage = lazy(() => import("@/pages/CodingLabHistoryPage"));
+const CapgeminiPrepPage = lazy(() => import("@/pages/CapgeminiPrepPage"));
 
 // Game Arena Pages
 const GameArenaPage = lazy(() => import("@/pages/GameArenaPage"));
@@ -125,6 +126,7 @@ function AppContent() {
           <Route path="/coding-lab/debugging" element={<FirebaseProtectedRoute><CodingLabWorkspacePage /></FirebaseProtectedRoute>} />
           <Route path="/coding-lab/practice" element={<FirebaseProtectedRoute><CodingLabWorkspacePage /></FirebaseProtectedRoute>} />
           <Route path="/coding-lab/assessment" element={<FirebaseProtectedRoute><CodingLabAssessmentPage /></FirebaseProtectedRoute>} />
+          <Route path="/coding-lab/capgemini" element={<FirebaseProtectedRoute><CapgeminiPrepPage /></FirebaseProtectedRoute>} />
           <Route path="/coding-lab/history" element={<FirebaseProtectedRoute><CodingLabHistoryPage /></FirebaseProtectedRoute>} />
           <Route path="/coding-lab/results/:attemptId" element={<FirebaseProtectedRoute><CodingLabResultsPage /></FirebaseProtectedRoute>} />
 
