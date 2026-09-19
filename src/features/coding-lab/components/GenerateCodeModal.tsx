@@ -27,6 +27,7 @@ interface GenerateCodeModalProps {
   problem: DebuggingProblem;
   currentLanguage: Language;
   onInsertCode: (code: string) => void;
+  initialPrompt?: string;
 }
 
 export const GenerateCodeModal: React.FC<GenerateCodeModalProps> = ({
@@ -35,6 +36,7 @@ export const GenerateCodeModal: React.FC<GenerateCodeModalProps> = ({
   problem,
   currentLanguage,
   onInsertCode,
+  initialPrompt,
 }) => {
   const { toast } = useToast();
   const [language, setLanguage] = useState<Language>(currentLanguage);
@@ -44,10 +46,17 @@ export const GenerateCodeModal: React.FC<GenerateCodeModalProps> = ({
   const [explanation, setExplanation] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Sync language when opened
+  // Sync language and initial prompt when opened
   React.useEffect(() => {
     setLanguage(currentLanguage);
-  }, [currentLanguage, open]);
+    if (open) {
+      if (initialPrompt) {
+        setInstruction(initialPrompt);
+      } else if (problem.aiPromptTemplate) {
+        setInstruction(problem.aiPromptTemplate);
+      }
+    }
+  }, [currentLanguage, open, initialPrompt, problem.aiPromptTemplate]);
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -134,15 +143,41 @@ export const GenerateCodeModal: React.FC<GenerateCodeModalProps> = ({
             </div>
 
             <div className="sm:col-span-2">
-              <label className="text-xs font-medium text-muted-foreground block mb-1">
-                Prompt / Custom Instructions
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-medium text-muted-foreground">
+                  AI Prompt & Requirements
+                </label>
+                {problem.aiPromptTemplate && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setInstruction(problem.aiPromptTemplate || "")}
+                    className="h-5 px-1.5 text-[10px] text-primary hover:text-primary/90"
+                  >
+                    Load Engineered Prompt
+                  </Button>
+                )}
+              </div>
               <Textarea
                 value={instruction}
                 onChange={(e) => setInstruction(e.target.value)}
                 placeholder="e.g. Write using two pointers with O(1) space, handle empty input..."
-                className="h-16 text-xs resize-none"
+                className="h-20 text-xs font-mono resize-none bg-background/80"
               />
+              {problem.promptEngineeringTips && problem.promptEngineeringTips.length > 0 && (
+                <div className="mt-1.5 p-2 bg-primary/5 border border-primary/20 rounded text-[11px] text-muted-foreground space-y-1">
+                  <span className="font-semibold text-primary flex items-center gap-1">
+                    <BookOpen className="w-3 h-3" />
+                    Prompt Engineering Tips:
+                  </span>
+                  <ul className="list-disc list-inside space-y-0.5 text-[10.5px]">
+                    {problem.promptEngineeringTips.map((tip, idx) => (
+                      <li key={idx}>{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
 

@@ -101,7 +101,7 @@ if (typeof process !== "undefined" && process.argv[1]?.includes("capgeminiValida
   console.log("=== CAPGEMINI QUESTION PACK VALIDATION ===");
   console.log(`Total questions: ${result.totalQuestions}`);
   console.log(`Valid: ${result.isValid}`);
-  console.log("Category Distribution:", result.stats.categoryBreakdown);
+  console.log("Stats summary:", result.stats);
   console.log(`Debugging: ${result.stats.debuggingCount}`);
   console.log(`Output Prediction: ${result.stats.outputPredictionCount}`);
   console.log(`Coding: ${result.stats.codingCount}`);

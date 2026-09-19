@@ -36,6 +36,13 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
   ArrowLeft,
   Bug,
   Code2,
@@ -55,6 +62,11 @@ import {
   FileText,
   Clock,
   RotateCcw,
+  Search,
+  Copy,
+  Check,
+  Layers,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStore } from "@/lib/store";
@@ -127,6 +139,21 @@ export default function CodingLabWorkspacePage() {
     }
     return {};
   });
+
+  // Browse modal & filter state
+  const [browseModalOpen, setBrowseModalOpen] = useState(false);
+  const [browseSearch, setBrowseSearch] = useState("");
+  const [browseCategory, setBrowseCategory] = useState("all");
+  const [aiPromptOpen, setAiPromptOpen] = useState(true);
+  const [promptCopied, setPromptCopied] = useState(false);
+
+  const handleCopyPrompt = () => {
+    if (!currentProblem.aiPromptTemplate) return;
+    navigator.clipboard.writeText(currentProblem.aiPromptTemplate);
+    setPromptCopied(true);
+    toast({ title: "Prompt Copied!", description: "Engineered prompt copied to clipboard." });
+    setTimeout(() => setPromptCopied(false), 2000);
+  };
 
   // Edge-case checklist state
   const [checklistOpen, setChecklistOpen] = useState(false);
@@ -285,6 +312,25 @@ export default function CodingLabWorkspacePage() {
     setCode(newCode);
   };
 
+  const browseFilteredProblems = React.useMemo(() => {
+    return PROBLEM_BANK.filter((p) => {
+      const q = browseSearch.toLowerCase().trim();
+      const matchesSearch =
+        q === "" ||
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.tags.some((t) => t.toLowerCase().includes(q)) ||
+        p.category.toLowerCase().includes(q);
+
+      if (!matchesSearch) return false;
+
+      if (browseCategory === "all") return true;
+      if (browseCategory === "leetcode-medium") return p.tags.includes("LeetCode Medium");
+      if (browseCategory === "ai-prompt") return Boolean(p.aiPromptTemplate);
+      return p.category === browseCategory;
+    });
+  }, [browseSearch, browseCategory]);
+
   const getDifficultyBadge = (diff: string) => {
     switch (diff) {
       case "Easy":
@@ -323,10 +369,10 @@ export default function CodingLabWorkspacePage() {
               if (idx !== -1) setCurrentProblemIndex(idx);
             }}
           >
-            <SelectTrigger className="h-8 max-w-[200px] sm:max-w-[300px] text-xs font-medium bg-background border-border/60 truncate">
+            <SelectTrigger className="h-8 max-w-[180px] sm:max-w-[240px] text-xs font-medium bg-background border-border/60 truncate">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-72">
               {problemList.map((p, idx) => (
                 <SelectItem key={p.id} value={p.id} className="text-xs">
                   {idx + 1}. {p.title} ({p.difficulty})
@@ -334,6 +380,21 @@ export default function CodingLabWorkspacePage() {
               ))}
             </SelectContent>
           </Select>
+
+          {/* Quick Problem Bank Browser Modal Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBrowseModalOpen(true)}
+            className="h-8 px-2 text-xs border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 shrink-0 flex items-center gap-1.5"
+            title="Browse all 66 questions with search & categories"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Browse</span>
+            <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-primary/20 text-primary">
+              {PROBLEM_BANK.length}
+            </Badge>
+          </Button>
 
           {getDifficultyBadge(currentProblem.difficulty)}
           <Badge variant="outline" className="hidden md:inline-flex text-[10px] capitalize">
@@ -548,6 +609,62 @@ export default function CodingLabWorkspacePage() {
               </CollapsibleContent>
             </Collapsible>
 
+            {/* AI Prompt Coding & Engineering Guide (Collapsible) */}
+            {currentProblem.aiPromptTemplate && (
+              <Collapsible open={aiPromptOpen} onOpenChange={setAiPromptOpen} className="border border-primary/30 rounded-lg bg-primary/5 p-3 space-y-2">
+                <CollapsibleTrigger className="flex items-center justify-between w-full text-xs font-semibold text-primary hover:opacity-80 transition-opacity">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <span>AI Prompt Coding & Engineering Guide</span>
+                  </span>
+                  {aiPromptOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-3 pt-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <p className="text-[11px] text-muted-foreground">
+                      Structured AI prompt template engineered for optimal LLM algorithmic accuracy:
+                    </p>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCopyPrompt}
+                        className="h-6 px-2 text-[10px] border-primary/30 hover:bg-primary/10"
+                      >
+                        {promptCopied ? <Check className="w-3 h-3 text-emerald-500 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
+                        {promptCopied ? "Copied" : "Copy Prompt"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setGenerateModalOpen(true)}
+                        className="h-6 px-2 text-[10px] bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        Generate with AI
+                      </Button>
+                    </div>
+                  </div>
+
+                  <pre className="p-2.5 bg-background border border-border/50 rounded font-mono text-[10.5px] text-foreground/90 whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-48">
+                    {currentProblem.aiPromptTemplate}
+                  </pre>
+
+                  {currentProblem.promptEngineeringTips && currentProblem.promptEngineeringTips.length > 0 && (
+                    <div className="space-y-1 pt-1 border-t border-border/40">
+                      <h5 className="text-[10px] uppercase font-semibold text-primary tracking-wider">
+                        Prompt Engineering Tips:
+                      </h5>
+                      <ul className="list-disc list-inside space-y-0.5 text-[11px] text-muted-foreground">
+                        {currentProblem.promptEngineeringTips.map((tip, idx) => (
+                          <li key={idx}>{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
             {/* Progressive Hints */}
             {currentProblem.hints && currentProblem.hints.length > 0 && (
               <div className="space-y-1.5 pt-1">
@@ -670,6 +787,140 @@ export default function CodingLabWorkspacePage() {
         currentLanguage={language}
         onInsertCode={handleInsertGeneratedCode}
       />
+
+      {/* Browse Question Bank Modal */}
+      <Dialog open={browseModalOpen} onOpenChange={setBrowseModalOpen}>
+        <DialogContent className="max-w-3xl bg-card border-border/60 max-h-[85vh] flex flex-col p-5">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between text-base">
+              <div className="flex items-center gap-2">
+                <Layers className="w-5 h-5 text-primary" />
+                <span>Coding Lab Question Bank</span>
+                <Badge variant="secondary" className="text-xs">
+                  {browseFilteredProblems.length} / {PROBLEM_BANK.length} Questions
+                </Badge>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Search & Category Filter Pills */}
+          <div className="space-y-2.5 pt-2">
+            <div className="relative">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                value={browseSearch}
+                onChange={(e) => setBrowseSearch(e.target.value)}
+                placeholder="Search by problem title, keyword, data structure, or tag..."
+                className="pl-9 h-9 text-xs bg-background/80"
+              />
+            </div>
+
+            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+              {[
+                { id: "all", label: `All (${PROBLEM_BANK.length})` },
+                { id: "leetcode-medium", label: "LeetCode Medium (56)" },
+                { id: "ai-prompt", label: "AI Prompt Coding" },
+                { id: "array", label: "Arrays & Two Pointers" },
+                { id: "string", label: "Strings & Sliding Window" },
+                { id: "linked-list", label: "Linked Lists" },
+                { id: "search-sort", label: "Binary Search" },
+                { id: "trees", label: "Trees & BST" },
+                { id: "graphs", label: "Graphs (BFS/DFS)" },
+                { id: "dynamic-programming", label: "Dynamic Programming" },
+                { id: "stack-queue", label: "Monotonic Stack / Queue" },
+                { id: "recursion", label: "Backtracking & Recursion" },
+                { id: "boundary", label: "Boundary & Intervals" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setBrowseCategory(cat.id)}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                    browseCategory === cat.id
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted/40 text-muted-foreground hover:bg-muted/80 hover:text-foreground border border-border/40"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Problem Cards List */}
+          <div className="flex-1 overflow-y-auto space-y-2 mt-2 pr-1 max-h-[50vh]">
+            {browseFilteredProblems.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-xs">
+                No problems matched your search or category filter.
+              </div>
+            ) : (
+              browseFilteredProblems.map((prob) => {
+                const isSelected = prob.id === currentProblem.id;
+                return (
+                  <div
+                    key={prob.id}
+                    onClick={() => {
+                      const idx = problemList.findIndex((p) => p.id === prob.id);
+                      if (idx !== -1) {
+                        setCurrentProblemIndex(idx);
+                      } else {
+                        // If selected from outside filtered list
+                        const globalIdx = PROBLEM_BANK.findIndex((p) => p.id === prob.id);
+                        if (globalIdx !== -1) setCurrentProblemIndex(globalIdx);
+                      }
+                      setBrowseModalOpen(false);
+                      toast({ title: "Switched Problem", description: prob.title });
+                    }}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      isSelected
+                        ? "bg-primary/10 border-primary shadow-sm"
+                        : "bg-background/60 hover:bg-muted/40 border-border/50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-xs text-foreground">
+                          {prob.title}
+                        </span>
+                        {getDifficultyBadge(prob.difficulty)}
+                        <Badge variant="outline" className="text-[10px] uppercase font-mono">
+                          {prob.language}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {prob.category}
+                        </Badge>
+                        {prob.aiPromptTemplate && (
+                          <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px] flex items-center gap-1">
+                            <Sparkles className="w-2.5 h-2.5" />
+                            <span>AI Prompt</span>
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0 font-mono">
+                        {prob.timeComplexity || "O(n)"}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                      {prob.description}
+                    </p>
+
+                    <div className="flex items-center gap-1 mt-2 flex-wrap">
+                      {prob.tags.slice(0, 4).map((tag) => (
+                        <span
+                          key={tag}
+                          className="text-[10px] px-1.5 py-0.5 rounded bg-muted/50 text-muted-foreground"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

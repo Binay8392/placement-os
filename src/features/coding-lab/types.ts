@@ -15,7 +15,11 @@ export type ProblemCategory =
   | "runtime"
   | "linked-list"
   | "stack-queue"
-  | "search-sort";
+  | "search-sort"
+  | "trees"
+  | "graphs"
+  | "dynamic-programming"
+  | "ai-prompt";
 
 export type AssessmentMode = "practice" | "interview" | "assessment";
 
@@ -44,6 +48,9 @@ export interface DebuggingProblem {
   solutionCode?: string;
   timeComplexity?: string;
   spaceComplexity?: string;
+  // AI Prompt Coding enhancements
+  aiPromptTemplate?: string;
+  promptEngineeringTips?: string[];
 }
 
 export type ExecutionStatus =

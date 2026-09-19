@@ -1,6 +1,7 @@
 import { DebuggingProblem } from "../types";
+import { DSA_MEDIUM_PROBLEM_BANK } from "./dsaMedium";
 
-export const PROBLEM_BANK: DebuggingProblem[] = [
+export const CORE_DEBUG_PROBLEMS: DebuggingProblem[] = [
   // 1. BOUNDARY & SEARCH - Binary Search Off-by-One (C++)
   {
     id: "debug-cpp-01",
@@ -689,3 +690,9 @@ int maxSubArray(const vector<int>& nums) {
     hiddenTestCount: 1,
   },
 ];
+
+export const PROBLEM_BANK: DebuggingProblem[] = [
+  ...CORE_DEBUG_PROBLEMS,
+  ...DSA_MEDIUM_PROBLEM_BANK,
+];
+

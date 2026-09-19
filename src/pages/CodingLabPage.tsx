@@ -253,15 +253,15 @@ export default function CodingLabPage() {
             <div className="space-y-1.5 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span>11 Categories: Boundary, Logic, Pointers, Loops</span>
+                <span>66 Total Questions across 13 core categories</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span>C++, Java, Python, JavaScript support</span>
+                <span>56 LeetCode Medium DSA Debugging problems</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Hidden test-case validation</span>
+                <span>AI Prompt Engineering templates & tips</span>
               </div>
             </div>
 
@@ -282,21 +282,21 @@ export default function CodingLabPage() {
             <div className="p-2.5 w-fit rounded-lg bg-emerald-500/10 text-emerald-500 mb-2">
               <Code2 className="w-5 h-5" />
             </div>
-            <CardTitle className="text-lg">Algorithm Practice</CardTitle>
+            <CardTitle className="text-lg">LeetCode Medium & AI Prompt Coding</CardTitle>
             <CardDescription className="text-xs leading-relaxed">
-              Standard coding interview problem solving with full Monaco editor features, progressive
-              hints, complexity reviews, and test runner.
+              Master 56 LeetCode Medium DSA problems across Arrays, Linked Lists, Trees, Graphs, DP,
+              and Backtracking with AI prompt engineering workflows and unit test execution.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-1 flex flex-col justify-between space-y-4 pt-0">
             <div className="space-y-1.5 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Two Pointers, Hash Maps, Binary Search</span>
+                <span>Two Pointers, Sliding Window, Trees, Graphs, DP</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Dynamic Big-O complexity explanation</span>
+                <span>Structured AI prompt templates for every problem</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
