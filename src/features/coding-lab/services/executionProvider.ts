@@ -140,8 +140,15 @@ export class IsolatedDevExecutionProvider implements CodeExecutionProvider {
       };
     }
 
-    // Combine public and hidden tests
-    const allTests = [...problem.publicTests, ...(problem.hiddenTests || [])];
+    // Combine public and hidden test placeholders (sensitive test data is never in the client bundle)
+    const hiddenCount = problem.hiddenTestCount ?? 3;
+    const hiddenPlaceholders: TestCase[] = Array.from({ length: hiddenCount }, (_, i) => ({
+      id: `${problem.id}-h${i + 1}`,
+      input: "[Hidden Test Case]",
+      expectedOutput: "[Hidden]",
+      isHidden: true,
+    }));
+    const allTests = [...problem.publicTests, ...hiddenPlaceholders];
     return this.evaluateTests(request.code, request.language, allTests, true, problem);
   }
 

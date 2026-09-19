@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { SERVER_HIDDEN_TESTS } from "./hiddenTests.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,7 +51,10 @@ serve(async (req) => {
     }
 
     const startTime = Date.now();
-    const tests: TestCase[] = testCases || [];
+    const publicTests: TestCase[] = testCases || [];
+    // Inject server-stored hidden test cases during submission (never client-provided)
+    const serverHidden = action === "submit" && problemId ? (SERVER_HIDDEN_TESTS[problemId] || []) : [];
+    const tests: TestCase[] = [...publicTests, ...serverHidden];
 
     // Evaluate tests
     const testResults = tests.map((t) => {

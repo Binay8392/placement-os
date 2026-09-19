@@ -39,24 +39,46 @@ CREATE INDEX IF NOT EXISTS idx_coding_submissions_attempt ON public.coding_submi
 ALTER TABLE public.coding_attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.coding_submissions ENABLE ROW LEVEL SECURITY;
 
+-- Helper function or condition to verify user identity against Supabase auth or JWT sub claim
 -- RLS Policies for coding_attempts
 CREATE POLICY "Users can view their own coding attempts"
 ON public.coding_attempts FOR SELECT
-USING (true);
+USING (
+  auth.role() = 'service_role' OR 
+  (auth.uid() IS NOT NULL AND auth.uid()::text = user_id) OR 
+  (nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub') = user_id
+);
 
 CREATE POLICY "Users can insert their own coding attempts"
 ON public.coding_attempts FOR INSERT
-WITH CHECK (true);
+WITH CHECK (
+  auth.role() = 'service_role' OR 
+  (auth.uid() IS NOT NULL AND auth.uid()::text = user_id) OR 
+  (nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub') = user_id
+);
 
 CREATE POLICY "Users can update their own coding attempts"
 ON public.coding_attempts FOR UPDATE
-USING (true);
+USING (
+  auth.role() = 'service_role' OR 
+  (auth.uid() IS NOT NULL AND auth.uid()::text = user_id) OR 
+  (nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub') = user_id
+);
 
 -- RLS Policies for coding_submissions
 CREATE POLICY "Users can view their own coding submissions"
 ON public.coding_submissions FOR SELECT
-USING (true);
+USING (
+  auth.role() = 'service_role' OR 
+  (auth.uid() IS NOT NULL AND auth.uid()::text = user_id) OR 
+  (nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub') = user_id
+);
 
 CREATE POLICY "Users can insert their own coding submissions"
 ON public.coding_submissions FOR INSERT
-WITH CHECK (true);
+WITH CHECK (
+  auth.role() = 'service_role' OR 
+  (auth.uid() IS NOT NULL AND auth.uid()::text = user_id) OR 
+  (nullif(current_setting('request.jwt.claims', true), '')::jsonb->>'sub') = user_id
+);
+

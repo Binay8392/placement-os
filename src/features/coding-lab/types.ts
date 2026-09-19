@@ -38,7 +38,7 @@ export interface DebuggingProblem {
   expectedBehavior: string;
   constraints: string[];
   publicTests: TestCase[];
-  hiddenTests?: TestCase[];
+  hiddenTestCount?: number;
   hints: string[];
   tags: string[];
   solutionCode?: string;

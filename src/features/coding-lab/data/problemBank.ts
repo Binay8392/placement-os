@@ -85,26 +85,7 @@ int binarySearch(const vector<int>& nums, int target) {
         explanation: "Single element array containing target",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-01-h1",
-        input: "nums = [1, 2, 3, 4, 5, 6], target = 6",
-        expectedOutput: "5",
-        isHidden: true,
-      },
-      {
-        id: "tc-01-h2",
-        input: "nums = [1, 2, 3, 4, 5, 6], target = 1",
-        expectedOutput: "0",
-        isHidden: true,
-      },
-      {
-        id: "tc-01-h3",
-        input: "nums = [10, 20, 30], target = 5",
-        expectedOutput: "-1",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 3,
   },
 
   // 2. ARRAY & LOOP - Two Sum Bug (Python)
@@ -165,20 +146,7 @@ int binarySearch(const vector<int>& nums, int target) {
         expectedOutput: "[0, 1]",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-02-h1",
-        input: "nums = [-3, 4, 3, 90], target = 0",
-        expectedOutput: "[0, 2]",
-        isHidden: true,
-      },
-      {
-        id: "tc-02-h2",
-        input: "nums = [0, 4, 3, 0], target = 0",
-        expectedOutput: "[0, 3]",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 3,
   },
 
   // 3. STRING & LOGIC - Valid Palindrome Special Character Filter (JavaScript)
@@ -249,20 +217,7 @@ int binarySearch(const vector<int>& nums, int target) {
         expectedOutput: "true",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-03-h1",
-        input: 's = "0P"',
-        expectedOutput: "false",
-        isHidden: true,
-      },
-      {
-        id: "tc-03-h2",
-        input: 's = "ab_a"',
-        expectedOutput: "true",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 2,
   },
 
   // 4. STACK / QUEUE - Valid Parentheses (Java)
@@ -348,20 +303,7 @@ public class Solution {
         expectedOutput: "false",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-04-h1",
-        input: 's = "]"',
-        expectedOutput: "false",
-        isHidden: true,
-      },
-      {
-        id: "tc-04-h2",
-        input: 's = "(("',
-        expectedOutput: "false",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 2,
   },
 
   // 5. RECURSION - Fibonacci & Base Case (Python)
@@ -417,26 +359,7 @@ public class Solution {
         expectedOutput: "3",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-05-h1",
-        input: "n = 0",
-        expectedOutput: "0",
-        isHidden: true,
-      },
-      {
-        id: "tc-05-h2",
-        input: "n = 1",
-        expectedOutput: "1",
-        isHidden: true,
-      },
-      {
-        id: "tc-05-h3",
-        input: "n = 10",
-        expectedOutput: "55",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 3,
   },
 
   // 6. LINKED LIST - Reverse Linked List Pointer Bug (C++)
@@ -512,14 +435,7 @@ ListNode* reverseList(ListNode* head) {
         expectedOutput: "[]",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-06-h1",
-        input: "head = [1]",
-        expectedOutput: "[1]",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 1,
   },
 
   // 7. RUNTIME - Integer Division & Zero Check (JavaScript)
@@ -570,14 +486,7 @@ ListNode* reverseList(ListNode* head) {
         expectedOutput: "0",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-07-h1",
-        input: "reviews = [{rating: 5}]",
-        expectedOutput: "5",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 1,
   },
 
   // 8. SEARCH / SORT - Custom Comparator Bug (Java)
@@ -637,14 +546,7 @@ public class Solution {
         expectedOutput: "[[3, 3], [-2, 4]]",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-08-h1",
-        input: "points = [[100000, 100000], [1, 1]], k = 1",
-        expectedOutput: "[[1, 1]]",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 1,
   },
 
   // 9. LOOP - Maximum Subarray (Kadane's) Initialization Bug (C++)
@@ -719,20 +621,7 @@ int maxSubArray(const vector<int>& nums) {
         expectedOutput: "23",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-09-h1",
-        input: "nums = [-5, -2, -9, -1]",
-        expectedOutput: "-1",
-        isHidden: true,
-      },
-      {
-        id: "tc-09-h2",
-        input: "nums = [-100]",
-        expectedOutput: "-100",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 2,
   },
 
   // 10. SYNTAX & LOGIC - String Anagram Frequency Counter (Python)
@@ -797,13 +686,6 @@ int maxSubArray(const vector<int>& nums) {
         expectedOutput: "False",
       },
     ],
-    hiddenTests: [
-      {
-        id: "tc-10-h1",
-        input: 's = "aacc", t = "ccac"',
-        expectedOutput: "False",
-        isHidden: true,
-      },
-    ],
+    hiddenTestCount: 1,
   },
 ];

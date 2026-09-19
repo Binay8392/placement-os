@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useStore } from "@/lib/store";
+import { useFirebaseAuth } from "@/hooks/useFirebaseAuth";
+import { getUserCodingAttempts } from "@/features/coding-lab/utils/codingLabFirebase";
+import type { AssessmentAttempt } from "@/features/coding-lab/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,9 +23,32 @@ import {
 
 export default function CodingLabHistoryPage() {
   const navigate = useNavigate();
+  const { user } = useFirebaseAuth();
   const { codingAttempts, dsaTopics } = useStore();
+  const [remoteAttempts, setRemoteAttempts] = useState<AssessmentAttempt[]>([]);
 
-  const attempts = codingAttempts || [];
+  useEffect(() => {
+    if (!user?.uid) return;
+    let isMounted = true;
+    getUserCodingAttempts(user.uid).then((items) => {
+      if (isMounted && items.length > 0) {
+        setRemoteAttempts(items);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.uid]);
+
+  // Merge store attempts and Firestore attempts (deduplicating by id)
+  const attempts = React.useMemo(() => {
+    const map = new Map<string, AssessmentAttempt>();
+    (codingAttempts || []).forEach((a) => map.set(a.id, a));
+    remoteAttempts.forEach((a) => map.set(a.id, a));
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.completedAt || b.createdAt).getTime() - new Date(a.completedAt || a.createdAt).getTime()
+    );
+  }, [codingAttempts, remoteAttempts]);
 
   // Compute metrics from actual attempts
   let totalSolved = 0;

@@ -25,6 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useStore } from "@/lib/store";
 import { useFirebaseAuth } from "@/hooks/useFirebaseAuth";
+import { saveCodingAttempt } from "@/features/coding-lab/utils/codingLabFirebase";
 
 export default function CodingLabAssessmentPage() {
   const navigate = useNavigate();
@@ -212,6 +213,13 @@ export default function CodingLabAssessmentPage() {
 
       // Record attempt into Zustand store (which also updates dsaTopics & readiness!)
       recordCodingAttempt(newAttempt);
+
+      // Persist attempt to isolated Firebase Firestore subcollection if authenticated
+      if (user?.uid) {
+        saveCodingAttempt(user.uid, newAttempt).catch((e) =>
+          console.warn("[CodingLab] Background Firestore sync failed:", e)
+        );
+      }
 
       // Clean up localStorage for this preset
       localStorage.removeItem(`preptrack_active_assessment_${preset.id}`);
