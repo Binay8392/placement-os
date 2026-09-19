@@ -1,4 +1,4 @@
-import { DebuggingProblem } from "./types";
+import { DebuggingProblem } from "../types";
 
 export const PROBLEM_BANK: DebuggingProblem[] = [
   // 1. BOUNDARY & SEARCH - Binary Search Off-by-One (C++)

@@ -55,6 +55,8 @@ export type ExecutionStatus =
   | "TIMEOUT"
   | "MEMORY_ERROR";
 
+export type SubmissionStatus = ExecutionStatus;
+
 export interface TestCaseResult {
   testCaseId: string;
   passed: boolean;

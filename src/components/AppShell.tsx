@@ -124,7 +124,7 @@ function AppTopbar() {
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
 
-  if (location.pathname === '/auth') {
+  if (location.pathname === '/auth' || location.pathname === '/verify-email') {
     return <>{children}</>;
   }
 

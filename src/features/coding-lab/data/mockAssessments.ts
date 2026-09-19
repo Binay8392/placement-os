@@ -1,4 +1,4 @@
-import { DebuggingProblem } from "./types";
+import { DebuggingProblem } from "../types";
 import { PROBLEM_BANK } from "./problemBank";
 
 export interface MockAssessmentPreset {

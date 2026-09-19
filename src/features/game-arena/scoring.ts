@@ -2,6 +2,7 @@ import {
   defaultScoringWeights,
   difficultyScore,
   difficultyStep,
+  stepDifficulty,
 } from './config';
 import type {
   AnswerRecord,

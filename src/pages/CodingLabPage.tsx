@@ -53,7 +53,7 @@ export default function CodingLabPage() {
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4 sm:px-6 space-y-8 animate-fade-in">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-zinc-900 via-zinc-850 to-zinc-900 border border-border/50 p-6 md:p-8 shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 border border-border/50 p-6 md:p-8 shadow-xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">

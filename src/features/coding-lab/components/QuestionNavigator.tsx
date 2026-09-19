@@ -9,7 +9,7 @@ interface QuestionNavigatorProps {
   problems: DebuggingProblem[];
   currentIndex: number;
   onSelectProblem: (index: number) => void;
-  problemStatuses: Record<string, { status: ExecutionStatus; passed: boolean }>;
+  problemStatuses: Record<string, { status: ExecutionStatus | "NOT_STARTED"; passed: boolean }>;
   title?: string;
   isAssessment?: boolean;
 }

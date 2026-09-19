@@ -36,11 +36,13 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useStore } from "@/lib/store";
+import { useFirebaseAuth } from "@/hooks/useFirebaseAuth";
 
 export default function CodingLabWorkspacePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useFirebaseAuth();
   const isDebugging = location.pathname.includes("/debugging");
 
   // Filter problems if category query param is present
@@ -116,6 +118,7 @@ export default function CodingLabWorkspacePage() {
         problemId: currentProblem.id,
         code,
         language,
+        userId: user?.uid,
       });
       setExecutionResult(res);
       setMobileActiveTab("tests");
